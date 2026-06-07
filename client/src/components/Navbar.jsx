@@ -62,7 +62,6 @@ const Navbar = ({ isAdmin }) => {
 
   const adminLinks = [
     { name: 'Admin Dashboard', path: '/admin', icon: <MdOutlineDashboard /> },
-    { name: 'Manage Users', path: '/admin/users', icon: <FiUsers /> },
   ];
 
   // If the user's account is an admin, let them toggle views
