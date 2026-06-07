@@ -2661,7 +2661,117 @@ const topicData = {
         "order": 1,
         "youtubeLink": "https://www.youtube.com/watch?v=3c-iBn73dDE"
     }
-]
+],
+  'open-source:1': [
+    {
+      "title": "Git Basics Tutorial",
+      "description": "Learn git init, commit, push, pull and basics of version control.",
+      "difficulty": "beginner",
+      "estimatedTime": "1 hour",
+      "order": 1,
+      "youtubeLink": "https://www.youtube.com/watch?v=apGV9Kg7ics"
+    }
+  ],
+  'open-source:2': [
+    {
+      "title": "GitHub Collaboration Guide",
+      "description": "Understand repositories, forks, stars, and basic collaboration.",
+      "difficulty": "beginner",
+      "estimatedTime": "1 hour",
+      "order": 1,
+      "youtubeLink": "https://www.youtube.com/watch?v=RGOj5yH7evk"
+    }
+  ],
+  'open-source:3': [
+    {
+      "title": "Markdown Crash Course",
+      "description": "Master README formatting, basic markup syntax, and documentation editing.",
+      "difficulty": "beginner",
+      "estimatedTime": "30 mins",
+      "order": 1,
+      "youtubeLink": "https://www.youtube.com/watch?v=HUELvF7IPGQ"
+    }
+  ],
+  'open-source:4': [
+    {
+      "title": "Finding Good First Issues",
+      "description": "How to browse issues, filter tags, and find beginner friendly tasks.",
+      "difficulty": "beginner",
+      "estimatedTime": "1 hour",
+      "order": 1,
+      "youtubeLink": "https://www.youtube.com/watch?v=Hco3QeN_Q28"
+    }
+  ],
+  'open-source:5': [
+    {
+      "title": "Creating Pull Requests",
+      "description": "Step-by-step guide to staging commits, opening PRs, and addressing code review feedback.",
+      "difficulty": "beginner",
+      "estimatedTime": "1 hour",
+      "order": 1,
+      "youtubeLink": "https://www.youtube.com/watch?v=Hco3QeN_Q28"
+    }
+  ],
+  'open-source:6': [
+    {
+      "title": "Branching and Merge Conflicts",
+      "description": "Learn branching strategies, git merge, rebase, and resolving conflicts.",
+      "difficulty": "intermediate",
+      "estimatedTime": "1 hour",
+      "order": 1,
+      "youtubeLink": "https://www.youtube.com/watch?v=Hco3QeN_Q28"
+    }
+  ],
+  'open-source:7': [
+    {
+      "title": "The Art of Code Review",
+      "description": "How to review open source code, provide constructive feedback, and collaborate.",
+      "difficulty": "intermediate",
+      "estimatedTime": "1 hour",
+      "order": 1,
+      "youtubeLink": "https://www.youtube.com/watch?v=l_a6a0qXpEw"
+    }
+  ],
+  'open-source:8': [
+    {
+      "title": "Contributing to Documentation",
+      "description": "Why documentation is important and how to submit improvements to wikis and docs.",
+      "difficulty": "beginner",
+      "estimatedTime": "45 mins",
+      "order": 1,
+      "youtubeLink": "https://www.youtube.com/watch?v=Hco3QeN_Q28"
+    }
+  ],
+  'open-source:9': [
+    {
+      "title": "Beginner Friendly Repositories",
+      "description": "Explore curated lists of repositories welcoming first-time contributors.",
+      "difficulty": "beginner",
+      "estimatedTime": "1 hour",
+      "order": 1,
+      "youtubeLink": "https://www.youtube.com/watch?v=yGe30KKKqpY"
+    }
+  ],
+  'open-source:10': [
+    {
+      "title": "Your First Contribution",
+      "description": "Putting it all together to submit your first merged PR to a real repository.",
+      "difficulty": "intermediate",
+      "estimatedTime": "2 hours",
+      "order": 1,
+      "youtubeLink": "https://www.youtube.com/watch?v=yGe30KKKqpY"
+    }
+  ],
+  'open-source:11': [
+    {
+      "title": "Building your Open Source Portfolio",
+      "description": "Optimize your GitHub profile, pin key contributions, and showcase your work.",
+      "difficulty": "intermediate",
+      "estimatedTime": "1 hour",
+      "order": 1,
+      "youtubeLink": "https://www.youtube.com/watch?v=yGe30KKKqpY"
+    }
+  ]
 };
 
 module.exports = topicData;
