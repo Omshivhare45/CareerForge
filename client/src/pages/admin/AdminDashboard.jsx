@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../../api/axios';
 import { 
   FiUsers, 
@@ -335,37 +336,45 @@ const AdminDashboard = () => {
             <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">Personalize student trajectories, oversee specializations, and customize platform curriculums.</p>
           </div>
 
-          <div className="flex flex-wrap gap-2 bg-slate-100/80 dark:bg-slate-950/40 p-1 rounded-xl border border-slate-200/60 dark:border-white/5">
-            <button
-              onClick={() => setActiveTab('users')}
-              className={`px-4 py-2 rounded-lg text-xs font-black transition-all ${activeTab === 'users' ? 'bg-emerald-600 dark:bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <div className="flex flex-wrap gap-2 bg-slate-100/80 dark:bg-slate-950/40 p-1 rounded-xl border border-slate-200/60 dark:border-white/5">
+              <button
+                onClick={() => setActiveTab('users')}
+                className={`px-4 py-2 rounded-lg text-xs font-black transition-all ${activeTab === 'users' ? 'bg-emerald-600 dark:bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
+              >
+                👥 Manage Users
+              </button>
+              <button
+                onClick={() => setActiveTab('domains')}
+                className={`px-4 py-2 rounded-lg text-xs font-black transition-all ${activeTab === 'domains' ? 'bg-emerald-600 dark:bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
+              >
+                🗺️ Domains
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('topics');
+                  fetchTopics();
+                }}
+                className={`px-4 py-2 rounded-lg text-xs font-black transition-all ${activeTab === 'topics' ? 'bg-emerald-600 dark:bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
+              >
+                📚 Topic Video Links
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('assessments');
+                  fetchAssessments();
+                }}
+                className={`px-4 py-2 rounded-lg text-xs font-black transition-all ${activeTab === 'assessments' ? 'bg-emerald-600 dark:bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
+              >
+                📝 Assign Assessments
+              </button>
+            </div>
+            <Link
+              to="/dashboard"
+              className="px-4 py-2.5 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-500 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white shadow-md hover:-translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
             >
-              👥 Manage Users
-            </button>
-            <button
-              onClick={() => setActiveTab('domains')}
-              className={`px-4 py-2 rounded-lg text-xs font-black transition-all ${activeTab === 'domains' ? 'bg-emerald-600 dark:bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
-            >
-              🗺️ Domains
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab('topics');
-                fetchTopics();
-              }}
-              className={`px-4 py-2 rounded-lg text-xs font-black transition-all ${activeTab === 'topics' ? 'bg-emerald-600 dark:bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
-            >
-              📚 Topic Video Links
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab('assessments');
-                fetchAssessments();
-              }}
-              className={`px-4 py-2 rounded-lg text-xs font-black transition-all ${activeTab === 'assessments' ? 'bg-emerald-600 dark:bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
-            >
-              📝 Assign Assessments
-            </button>
+              👁️ View as Student
+            </Link>
           </div>
         </div>
       </div>

@@ -34,9 +34,13 @@ const Signup = () => {
     try {
       const { confirmPassword, ...registerData } = formData;
       registerData.email = registerData.email.trim();
-      await register(registerData);
+      const data = await register(registerData);
       toast.success('Account created successfully!');
-      navigate('/domains');
+      if (data.user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/domains');
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Registration failed');
     } finally {

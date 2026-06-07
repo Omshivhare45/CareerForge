@@ -4,7 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import logoImg from '../assets/logo.png';
 import { 
   FiMenu, FiX, FiBell, FiSearch, FiSun, FiMoon, FiLogOut, FiSettings,
-  FiMap, FiList, FiCheckSquare, FiMessageSquare, FiGift, FiBookOpen, FiZap, FiUsers
+  FiMap, FiList, FiCheckSquare, FiMessageSquare, FiGift, FiBookOpen, FiZap, FiUsers,
+  FiEye, FiShield
 } from 'react-icons/fi';
 import { MdOutlineDashboard } from "react-icons/md";
 
@@ -64,7 +65,15 @@ const Navbar = ({ isAdmin }) => {
     { name: 'Manage Users', path: '/admin/users', icon: <FiUsers /> },
   ];
 
-  const links = isAdmin ? adminLinks : studentLinks;
+  // If the user's account is an admin, let them toggle views
+  let links = [...(isAdmin ? adminLinks : studentLinks)];
+  if (user?.role === 'admin') {
+    if (isAdmin) {
+      links.push({ name: 'View as Student', path: '/dashboard', icon: <FiEye className="text-[var(--secondary)] font-black" /> });
+    } else {
+      links.push({ name: 'Return to Admin', path: '/admin', icon: <FiShield className="text-[var(--brand-orange)] font-black" /> });
+    }
+  }
 
   return (
     <>
