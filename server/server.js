@@ -74,6 +74,20 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'CareerForge API is running', timestamp: new Date() });
 });
 
+// Seed DB Migration trigger
+app.get('/api/health/seed-db-migration', async (req, res) => {
+  try {
+    console.log('🔄 Manual seed trigger initiated...');
+    const seedDB = require('./seeds/seedAll');
+    await seedDB();
+    console.log('✅ Manual seed completed successfully');
+    res.json({ success: true, message: 'Database successfully seeded!' });
+  } catch (err) {
+    console.error('❌ Manual seed failed:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // Error handler
 app.use(errorHandler);
 
