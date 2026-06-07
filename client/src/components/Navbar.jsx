@@ -51,7 +51,9 @@ const Navbar = ({ isAdmin }) => {
 
   useEffect(() => {
     const checkPrompt = () => {
-      setCanInstall(!!window.deferredPrompt);
+      // Show install options always on web browser, except when already in standalone app mode
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      setCanInstall(!isStandalone);
     };
     checkPrompt();
     window.addEventListener('pwa-prompt-change', checkPrompt);
@@ -60,14 +62,18 @@ const Navbar = ({ isAdmin }) => {
 
   const handleInstallClick = async () => {
     const promptEvent = window.deferredPrompt;
-    if (!promptEvent) return;
-    promptEvent.prompt();
-    const { outcome } = await promptEvent.userChoice;
-    if (outcome === 'accepted') {
-      console.log('User accepted the install prompt from Navbar');
+    if (promptEvent) {
+      promptEvent.prompt();
+      const { outcome } = await promptEvent.userChoice;
+      if (outcome === 'accepted') {
+        console.log('User accepted the install prompt from Navbar');
+      }
+      window.deferredPrompt = null;
+      window.dispatchEvent(new CustomEvent('pwa-prompt-change'));
+    } else {
+      // Trigger custom instructions modal if native installer is not ready
+      window.dispatchEvent(new CustomEvent('pwa-show-instructions'));
     }
-    window.deferredPrompt = null;
-    window.dispatchEvent(new CustomEvent('pwa-prompt-change'));
   };
 
   const handleLogout = () => {
