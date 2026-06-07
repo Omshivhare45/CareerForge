@@ -83,7 +83,7 @@ const Navbar = ({ isAdmin }) => {
               CF
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-xl font-black tracking-tight text-[var(--text-main)] leading-none">CareerForge</h1>
+              <h1 className="text-xl font-black tracking-tight text-[var(--text-main)] leading-none"><span className="text-logo-gradient">CareerForge</span></h1>
               <div className="text-[8px] font-black text-[var(--secondary)] uppercase tracking-[0.2em] mt-0.5">Geek in Training</div>
             </div>
           </Link>
@@ -212,7 +212,7 @@ const Navbar = ({ isAdmin }) => {
             <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
               <Link to="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
                 <div className="w-8 h-8 rounded-lg bg-[var(--primary)] flex items-center justify-center text-white font-extrabold text-sm shadow-md">CF</div>
-                <h1 className="text-lg font-black tracking-tight text-[var(--text-main)]">CareerForge</h1>
+                <h1 className="text-lg font-black tracking-tight text-[var(--text-main)]"><span className="text-logo-gradient">CareerForge</span></h1>
               </Link>
               <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-[var(--text-muted)] hover:bg-[var(--bg-sub)] rounded-lg">
                 <FiX className="text-xl" />

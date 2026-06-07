@@ -21,7 +21,7 @@ const Landing = () => {
             <div className="w-10 h-10 rounded-xl bg-[var(--brand-green)] flex items-center justify-center text-white font-extrabold text-lg shadow-[var(--shadow-bubbly)]">
               CF
             </div>
-            <h1 className="text-2xl font-black text-[var(--land-text)] tracking-tight">CareerForge</h1>
+            <h1 className="text-2xl font-black text-[var(--land-text)] tracking-tight"><span className="text-logo-gradient">CareerForge</span></h1>
           </div>
           
           {/* Center Links */}
@@ -240,7 +240,7 @@ const Landing = () => {
               CF
             </div>
             <div>
-              <span className="text-xl font-black tracking-tight block">CareerForge</span>
+              <span className="text-xl font-black tracking-tight block"><span className="text-logo-gradient">CareerForge</span></span>
               <span className="text-gray-400 text-sm font-semibold">© 2026 All rights reserved.</span>
             </div>
           </div>
