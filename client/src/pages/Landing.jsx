@@ -19,8 +19,8 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-between w-full">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <img src={logoImg} alt="CareerForge Logo" className="w-10 h-10 rounded-xl shadow-[var(--shadow-bubbly)] object-cover" />
-            <h1 className="text-2xl font-black text-[var(--land-text)] tracking-tight"><span className="text-logo-gradient">CareerForge</span></h1>
+            <img src={logoImg} alt="CareerForge Logo" className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl shadow-[var(--shadow-bubbly)] object-cover" />
+            <h1 className="text-xl sm:text-2xl font-black text-[var(--land-text)] tracking-tight"><span className="text-logo-gradient">CareerForge</span></h1>
           </div>
           
           {/* Center Links */}
@@ -32,9 +32,9 @@ const Landing = () => {
           </div>
           
           {/* Right Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {isAuthenticated ? (
-              <Link to="/dashboard" className="bg-[var(--brand-green)] hover:bg-[var(--brand-green-hover)] text-white font-extrabold px-6 py-2.5 rounded-lg transition-all shadow-[var(--shadow-bubbly)] hover:-translate-y-0.5 flex items-center gap-2">
+              <Link to="/dashboard" className="hidden sm:inline-flex bg-[var(--brand-green)] hover:bg-[var(--brand-green-hover)] text-white font-extrabold px-6 py-2.5 rounded-lg transition-all shadow-[var(--shadow-bubbly)] hover:-translate-y-0.5 items-center gap-2">
                 Go to Dashboard <FiArrowRight strokeWidth={3} />
               </Link>
             ) : (
@@ -42,7 +42,7 @@ const Landing = () => {
                 <Link to="/login" className="hidden sm:block text-[var(--land-nav)] hover:text-[var(--brand-green)] font-extrabold transition-colors px-4 py-2">
                   Sign In
                 </Link>
-                <Link to="/signup" className="bg-[var(--brand-green)] hover:bg-[var(--brand-green-hover)] text-white font-extrabold px-6 py-2.5 rounded-lg transition-all shadow-[var(--shadow-bubbly)] hover:-translate-y-0.5 flex items-center gap-2">
+                <Link to="/signup" className="hidden sm:inline-flex bg-[var(--brand-green)] hover:bg-[var(--brand-green-hover)] text-white font-extrabold px-6 py-2.5 rounded-lg transition-all shadow-[var(--shadow-bubbly)] hover:-translate-y-0.5 items-center gap-2">
                   Sign Up For Free <FiArrowRight strokeWidth={3} />
                 </Link>
               </>
