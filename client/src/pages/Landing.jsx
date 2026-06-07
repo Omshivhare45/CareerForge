@@ -117,7 +117,7 @@ const Landing = () => {
               </h1>
               
               <p className="text-[var(--land-nav)] text-lg md:text-xl font-semibold mb-10 max-w-xl mx-auto lg:mx-0">
-                Master Data Structures, Web Development, and AI. Join millions of students upgrading their skills with interactive roadmaps and AI mentorship.
+                Master Data Structures, Web Development, and AI. Upgrade your skills with interactive roadmaps and AI mentorship.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">

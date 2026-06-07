@@ -53,7 +53,7 @@ const Signup = () => {
           <h2 className="text-3xl font-black text-[var(--land-text)] tracking-tight mb-2">Create your account</h2>
           <div className="flex items-center justify-center gap-2 text-[var(--land-nav)] font-bold">
             <BsLightningFill className="text-[var(--brand-orange)]" />
-            <span>Join 2,400+ geeks building tech careers.</span>
+            <span>Start forging your tech career today.</span>
           </div>
         </div>
 
