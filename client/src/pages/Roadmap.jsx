@@ -122,6 +122,7 @@ const Roadmap = () => {
   if (!domainData) return null;
 
   const { domain, phases } = domainData;
+  const activePhase = phases.find(p => p.phaseNumber === activeLevel);
   const currentXP = activeDomainProgress.xp || 0;
   const currentStreak = user.dailyStreak || 0;
   const isDSA = domain.slug === 'dsa';
@@ -133,10 +134,9 @@ const Roadmap = () => {
   const langNames = DSA_LANGUAGE_LABELS;
 
   const handleSkipLevel = async () => {
-    const levelName = isDSA ? (dsaLevelNames[activeLevel] || phases[activeLevel].name) : phases[activeLevel].name;
+    const levelName = isDSA ? (dsaLevelNames[activeLevel] || activePhase?.name || 'Level') : (activePhase?.name || 'Level');
     if (window.confirm(`Are you sure you want to skip the entire "${levelName}" (Level ${activeLevel}) and mark all its topics as completed?`)) {
       try {
-        const activePhase = phases.find(p => p.phaseNumber === activeLevel);
         if (!activePhase) return;
         
         toast.loading('Processing skip...', { id: 'skip-level' });
@@ -186,7 +186,7 @@ const Roadmap = () => {
           <div>
             <div className="text-[10px] font-black text-[var(--text-light)] uppercase tracking-wider">Current Rank</div>
             <div className="text-2xl font-black text-[var(--text-main)]">
-              {isDSA ? (dsaLevelNames[activeDomainProgress.currentPhase || 1] || 'Apprentice') : (phases[activeDomainProgress.currentPhase || 1]?.name || 'Apprentice')}
+              {isDSA ? (dsaLevelNames[activeDomainProgress.currentPhase || 1] || 'Apprentice') : (phases.find(p => p.phaseNumber === (activeDomainProgress.currentPhase || 1))?.name || 'Apprentice')}
             </div>
           </div>
         </div>
@@ -312,12 +312,13 @@ const Roadmap = () => {
         <div className="flex items-start gap-12 min-w-max px-10 pb-10 relative">
           
           {phases.map((phase, index) => {
-            const isUnlocked = index <= (activeDomainProgress.currentPhase || 1);
-            const isCompleted = index < (activeDomainProgress.currentPhase || 1);
-            const isCurrent = index === (activeDomainProgress.currentPhase || 1);
+            const phaseNum = phase.phaseNumber;
+            const isUnlocked = phaseNum <= (activeDomainProgress.currentPhase || 1);
+            const isCompleted = phaseNum < (activeDomainProgress.currentPhase || 1);
+            const isCurrent = phaseNum === (activeDomainProgress.currentPhase || 1);
             
             // Override title if domain is DSA
-            const levelName = isDSA ? (dsaLevelNames[index] || phase.name) : phase.name;
+            const levelName = isDSA ? (dsaLevelNames[phaseNum] || phase.name) : phase.name;
 
             let nodeClass = "locked";
             if (isCompleted) nodeClass = "completed";
@@ -328,11 +329,11 @@ const Roadmap = () => {
                 {/* Level Node with custom states */}
                 <motion.div
                   whileHover={isUnlocked ? { scale: 1.08, y: -4 } : {}}
-                  onClick={() => isUnlocked && setActiveLevel(index)}
+                  onClick={() => isUnlocked && setActiveLevel(phaseNum)}
                   className={`level-node w-24 h-24 cursor-pointer relative ${nodeClass}`}
                 >
                   <span className="text-4xl mb-1 filter drop-shadow-sm">{getLevelIcon(index, domain.slug)}</span>
-                  <span className="text-[8px] font-black uppercase tracking-widest mt-0.5">LVL {index}</span>
+                  <span className="text-[8px] font-black uppercase tracking-widest mt-0.5">LVL {phaseNum}</span>
                   {isDSA && index < dsaAnalysis.startingLevel && (
                     <div className="absolute -bottom-3 bg-sky-500 text-white text-[7px] px-2 py-0.5 rounded-full font-black shadow-sm">
                       AI SKIP
@@ -364,7 +365,7 @@ const Roadmap = () => {
                 {index < phases.length - 1 && (
                   <div 
                     className={`absolute top-[48px] left-[106px] w-[50px] h-1 rounded-full transition-colors duration-1000 ${
-                      isUnlocked && (index + 1 <= (activeDomainProgress.currentPhase || 1)) 
+                      isUnlocked && (phases[index + 1]?.phaseNumber <= (activeDomainProgress.currentPhase || 1)) 
                         ? 'bg-gradient-to-r from-emerald-500 to-[var(--primary)]' 
                         : 'bg-[var(--border)]'
                     }`}
@@ -377,7 +378,7 @@ const Roadmap = () => {
       </div>
 
       {/* Level Details Expedition Panel */}
-      {activeLevel !== null && (
+      {activeLevel !== null && phases.length > 0 && (
         <motion.div 
           key={activeLevel}
           initial={{ opacity: 0, y: 20 }}
@@ -390,17 +391,17 @@ const Roadmap = () => {
             <div className="flex-1">
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-5xl bg-[var(--bg-sub)] border border-[var(--border)] w-16 h-16 flex items-center justify-center rounded-2xl shadow-inner shrink-0">
-                  {getLevelIcon(activeLevel, domain.slug)}
+                  {getLevelIcon(activePhase ? phases.indexOf(activePhase) : 0, domain.slug)}
                 </span>
                 <div>
                   <h2 className="text-3xl font-black text-[var(--text-main)] tracking-tight">
-                    {isDSA ? (dsaLevelNames[activeLevel] || phases[activeLevel].name) : phases[activeLevel].name}
+                    {isDSA ? (dsaLevelNames[activeLevel] || activePhase?.name || 'Level') : (activePhase?.name || 'Level')}
                   </h2>
                   <div className="text-[var(--primary)] font-black text-xs tracking-widest uppercase mt-0.5">Level {activeLevel} Expedition</div>
                 </div>
               </div>
               <p className="text-[var(--text-muted)] leading-relaxed max-w-2xl font-semibold text-sm">
-                {phases.find(p => p.phaseNumber === activeLevel)?.description || "Complete these challenges to master this level and earn massive XP rewards."}
+                {activePhase?.description || "Complete these challenges to master this level and earn massive XP rewards."}
               </p>
             </div>
             
@@ -432,7 +433,7 @@ const Roadmap = () => {
           </div>
 
           <TopicsList 
-            phaseId={phases.find(p => p.phaseNumber === activeLevel)?._id} 
+            phaseId={activePhase?._id} 
             isTopicCompleted={isTopicCompleted}
             activeLevel={activeLevel}
             isDSA={isDSA}
