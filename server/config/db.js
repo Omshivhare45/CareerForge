@@ -9,9 +9,15 @@ const connectWithTimeout = (uri) => mongoose.connect(uri, {
 
 const connectDB = async () => {
   try {
-    let uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/careerforge';
+    let uri = process.env.MONGODB_URI || process.env.MONGO_URI;
+    const isProduction = process.env.NODE_ENV === 'production';
 
-    if (process.env.USE_MEMORY_DB === 'true' || !process.env.MONGODB_URI) {
+    if (isProduction && !uri) {
+      console.error('❌ MONGODB_URI/MONGO_URI environment variable is missing in production. Connection failed.');
+      process.exit(1);
+    }
+
+    if (process.env.USE_MEMORY_DB === 'true' || !uri) {
       console.log('Starting in-memory MongoDB server...');
       mongoServer = await MongoMemoryServer.create();
       uri = mongoServer.getUri();

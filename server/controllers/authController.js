@@ -1,4 +1,8 @@
 const User = require('../models/User');
+const { OAuth2Client } = require('google-auth-library');
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 
 // @desc    Register user
 // @route   POST /api/auth/register
@@ -83,6 +87,82 @@ exports.login = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Google Login / Registration
+// @route   POST /api/auth/google
+exports.googleLogin = async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({ success: false, message: 'Google token is required' });
+    }
+
+    // Verify Google ID Token
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name, picture } = payload;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Google token payload is missing email' });
+    }
+
+    // Check if user already exists with this googleId
+    let user = await User.findOne({ googleId });
+
+    if (!user) {
+      // Check if user already exists with this email (to link local account)
+      user = await User.findOne({ email });
+      if (user) {
+        user.googleId = googleId;
+        user.provider = 'google';
+        if (picture && !user.avatar) {
+          user.avatar = picture;
+        }
+        await user.save();
+      } else {
+        // Auto-create new student account
+        user = await User.create({
+          fullName: name || 'Google User',
+          email,
+          googleId,
+          provider: 'google',
+          avatar: picture || '',
+          role: email === 'omshivhare666@gmail.com' ? 'admin' : 'student'
+        });
+      }
+    }
+
+    // Force admin approval for specific email
+    if (user.email === 'omshivhare666@gmail.com' && user.role !== 'admin') {
+      user.role = 'admin';
+      await user.save();
+    }
+
+    const jwtToken = user.generateToken();
+
+    res.json({
+      success: true,
+      token: jwtToken,
+      user: {
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        profile: user.profile,
+        activeDomain: user.activeDomain,
+        selectedDomain: user.activeDomain,
+        domainsProgress: user.domainsProgress,
+        dailyStreak: user.dailyStreak
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 
 // @desc    Get current user
 // @route   GET /api/auth/me

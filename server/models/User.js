@@ -58,8 +58,10 @@ const domainProgressSchema = new mongoose.Schema({
 const userSchema = new mongoose.Schema({
   fullName: { type: String, required: true, trim: true },
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  password: { type: String, required: true, minlength: 6 },
+  password: { type: String, required: function() { return this.provider !== 'google'; }, minlength: 6 },
   role: { type: String, enum: ['student', 'admin', 'mentor'], default: 'student' },
+  googleId: { type: String, default: '' },
+  provider: { type: String, enum: ['local', 'google'], default: 'local' },
   avatar: { type: String, default: '' },
   phone: { type: String, default: '' },
   
@@ -150,7 +152,7 @@ userSchema.set('toObject', { virtuals: true });
 
 // Hash password before save
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password') || !this.password) return next();
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
   next();

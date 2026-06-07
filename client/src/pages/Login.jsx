@@ -5,12 +5,13 @@ import logoImg from '../assets/logo.png';
 import toast from 'react-hot-toast';
 import { FiMail, FiLock, FiChevronRight } from 'react-icons/fi';
 import { BsLightningFill } from 'react-icons/bs';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -98,6 +99,40 @@ const Login = () => {
               )}
             </button>
           </form>
+
+          <div className="relative my-6 text-center">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-100"></div>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-3 text-gray-400 font-extrabold tracking-wide">Or continue with</span>
+            </div>
+          </div>
+
+          <div className="w-full flex justify-center">
+            <GoogleLogin
+              onSuccess={async (credentialResponse) => {
+                setIsLoading(true);
+                try {
+                  const data = await googleLogin(credentialResponse.credential);
+                  toast.success('Welcome back!');
+                  if (data.user.role === 'admin') navigate('/admin');
+                  else if (!data.user.activeDomain && !data.user.selectedDomain) navigate('/domains');
+                  else navigate('/dashboard');
+                } catch (error) {
+                  toast.error(error.response?.data?.message || 'Google login failed');
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+              onError={() => {
+                toast.error('Google Sign-In failed');
+              }}
+              theme="filled_black"
+              shape="pill"
+              width="360"
+            />
+          </div>
 
           <div className="mt-8 pt-8 border-t border-gray-100 text-center">
             <p className="text-[var(--land-nav)] font-bold">
