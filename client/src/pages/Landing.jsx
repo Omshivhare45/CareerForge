@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import logoImg from '../assets/logo.png';
@@ -9,6 +9,11 @@ const Landing = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    // Force light mode on public pages to prevent dark mode class leakage
+    document.documentElement.classList.remove('dark');
+  }, []);
 
   // Removed auto-redirect useEffect to allow logged-in users to view the landing page
 
