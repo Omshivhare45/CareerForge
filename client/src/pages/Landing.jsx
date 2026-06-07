@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import logoImg from '../assets/logo.png';
 import { FiMenu, FiX, FiArrowRight, FiCheckCircle, FiStar, FiTrendingUp, FiTarget, FiZap } from 'react-icons/fi';
 import { BsLightningFill } from 'react-icons/bs';
 
@@ -18,9 +19,7 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-between w-full">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-[var(--brand-green)] flex items-center justify-center text-white font-extrabold text-lg shadow-[var(--shadow-bubbly)]">
-              CF
-            </div>
+            <img src={logoImg} alt="CareerForge Logo" className="w-10 h-10 rounded-xl shadow-[var(--shadow-bubbly)] object-cover" />
             <h1 className="text-2xl font-black text-[var(--land-text)] tracking-tight"><span className="text-logo-gradient">CareerForge</span></h1>
           </div>
           
@@ -236,9 +235,7 @@ const Landing = () => {
       <footer className="bg-[#1E293B] text-white py-16 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[var(--brand-green)] flex items-center justify-center text-white font-extrabold text-lg">
-              CF
-            </div>
+            <img src={logoImg} alt="CareerForge Logo" className="w-10 h-10 rounded-xl object-cover" />
             <div>
               <span className="text-xl font-black tracking-tight block"><span className="text-logo-gradient">CareerForge</span></span>
               <span className="text-gray-400 text-sm font-semibold">© 2026 All rights reserved.</span>

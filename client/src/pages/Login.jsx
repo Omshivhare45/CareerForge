@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import logoImg from '../assets/logo.png';
 import toast from 'react-hot-toast';
 import { FiMail, FiLock, FiChevronRight } from 'react-icons/fi';
 import { BsLightningFill } from 'react-icons/bs';
@@ -36,8 +37,8 @@ const Login = () => {
       
       <div className="max-w-[440px] w-full relative z-10">
         <div className="text-center mb-10">
-          <Link to="/" className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--brand-green)] text-white shadow-[var(--shadow-bubbly)] mb-6 text-3xl font-black transform hover:-translate-y-1 transition-transform">
-            CF
+          <Link to="/" className="inline-block w-14 h-14 rounded-2xl shadow-[var(--shadow-bubbly)] mb-6 transform hover:-translate-y-1 transition-transform overflow-hidden">
+            <img src={logoImg} alt="CareerForge Logo" className="w-full h-full object-cover" />
           </Link>
           <h2 className="text-3xl font-black text-[var(--land-text)] tracking-tight mb-2">Welcome Back Geeks!</h2>
           <div className="flex items-center justify-center gap-2 text-[var(--land-nav)] font-bold">

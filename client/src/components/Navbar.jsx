@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import logoImg from '../assets/logo.png';
 import { 
   FiMenu, FiX, FiBell, FiSearch, FiSun, FiMoon, FiLogOut, FiSettings,
   FiMap, FiList, FiCheckSquare, FiMessageSquare, FiGift, FiBookOpen, FiZap, FiUsers
@@ -79,9 +80,7 @@ const Navbar = ({ isAdmin }) => {
           </button>
           
           <Link to="/" className="flex items-center gap-2 group outline-none">
-            <div className="w-9 h-9 rounded-xl bg-[var(--primary)] flex items-center justify-center text-white font-extrabold text-lg shadow-md group-hover:scale-105 transition-transform shrink-0">
-              CF
-            </div>
+            <img src={logoImg} alt="CareerForge Logo" className="w-9 h-9 rounded-xl shadow-md group-hover:scale-105 transition-transform shrink-0 object-cover" />
             <div className="hidden sm:block">
               <h1 className="text-xl font-black tracking-tight text-[var(--text-main)] leading-none"><span className="text-logo-gradient">CareerForge</span></h1>
               <div className="text-[8px] font-black text-[var(--secondary)] uppercase tracking-[0.2em] mt-0.5">Geek in Training</div>
@@ -211,7 +210,7 @@ const Navbar = ({ isAdmin }) => {
           <div className="relative w-72 max-w-full bg-[var(--bg-card)] h-full shadow-2xl flex flex-col transform transition-transform duration-300">
             <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
               <Link to="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
-                <div className="w-8 h-8 rounded-lg bg-[var(--primary)] flex items-center justify-center text-white font-extrabold text-sm shadow-md">CF</div>
+                <img src={logoImg} alt="CareerForge Logo" className="w-8 h-8 rounded-lg shadow-md shrink-0 object-cover" />
                 <h1 className="text-lg font-black tracking-tight text-[var(--text-main)]"><span className="text-logo-gradient">CareerForge</span></h1>
               </Link>
               <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-[var(--text-muted)] hover:bg-[var(--bg-sub)] rounded-lg">
