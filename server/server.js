@@ -19,7 +19,8 @@ app.use(express.urlencoded({ extended: true }));
 // Security
 app.use(helmet({
   contentSecurityPolicy: process.env.NODE_ENV === 'development' ? false : undefined,
-  crossOriginEmbedderPolicy: false
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' }
 }));
 
 // CORS
