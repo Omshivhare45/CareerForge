@@ -189,8 +189,7 @@ const Dashboard = () => {
           const domainKeys = {
             dsa: { name: 'Data Structures & Algorithms', slug: 'dsa', icon: '🌳', color: '#6366f1' },
             webdev: { name: 'Web Development Explorer', slug: 'web-development', icon: '🌐', color: '#4361ee' },
-            devops: { name: 'DevOps Expedition', slug: 'devops', icon: '🐳', color: '#10b981' },
-            opensource: { name: 'Open Source Expedition', slug: 'open-source', icon: '🔓', color: '#f59e0b' }
+            devops: { name: 'DevOps Expedition', slug: 'devops', icon: '🐳', color: '#10b981' }
           };
 
           for (const key of Object.keys(domainKeys)) {

@@ -128,16 +128,6 @@ const domains = [
     difficultyLevel: 'intermediate',
     estimatedDuration: '4-6 months',
     order: 13
-  },
-  {
-    name: 'Open Source',
-    slug: 'open-source',
-    shortDescription: 'Contribute to real-world projects.',
-    icon: '🌱',
-    color: '#22c55e',
-    difficultyLevel: 'beginner',
-    estimatedDuration: '2-4 months',
-    order: 14
   }
 ];
 
