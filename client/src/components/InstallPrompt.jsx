@@ -37,6 +37,8 @@ const InstallPrompt = () => {
       e.preventDefault();
       // Store event
       setDeferredPrompt(e);
+      window.deferredPrompt = e;
+      window.dispatchEvent(new CustomEvent('pwa-prompt-change'));
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -60,6 +62,8 @@ const InstallPrompt = () => {
         }
       });
       setDeferredPrompt(null);
+      window.deferredPrompt = null;
+      window.dispatchEvent(new CustomEvent('pwa-prompt-change'));
       setShowPrompt(false);
     };
 
@@ -121,6 +125,8 @@ const InstallPrompt = () => {
       localStorage.setItem(DISMISS_KEY, Date.now().toString());
     }
     setDeferredPrompt(null);
+    window.deferredPrompt = null;
+    window.dispatchEvent(new CustomEvent('pwa-prompt-change'));
     setShowPrompt(false);
   };
 
