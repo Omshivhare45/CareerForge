@@ -60,7 +60,7 @@ const submitFeedback = async (req, res) => {
       data: feedback
     });
   } catch (error) {
-    res.status(550).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -145,7 +145,7 @@ const toggleFeedbackApproval = async (req, res) => {
       data: feedback
     });
   } catch (error) {
-    res.status(550).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
