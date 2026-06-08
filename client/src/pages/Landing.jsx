@@ -308,8 +308,9 @@ const Landing = () => {
                 {testimonials.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {testimonials.slice(0, 6).map((t) => {
-                      const userObj = t.userId || {};
-                      const fullName = userObj.fullName || 'Deleted User';
+                      if (!t) return null;
+                      const userObj = t.userId && typeof t.userId === 'object' ? t.userId : {};
+                      const fullName = userObj.fullName || 'CareerForge Student';
                       const avatar = userObj.avatar || '';
 
                       return (

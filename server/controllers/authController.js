@@ -203,20 +203,29 @@ exports.getMe = async (req, res) => {
   }
 };
 
-// @desc    Update profile
+// @desc    Update user profile details
 // @route   PUT /api/auth/profile
 exports.updateProfile = async (req, res) => {
   try {
-    const updates = req.body;
+    const { fullName, phone, profile } = req.body;
+    
     const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
 
-    if (updates.fullName) user.fullName = updates.fullName;
-    if (updates.profile) {
-      user.profile = { ...(user.profile?.toObject ? user.profile.toObject() : (user.profile || {})), ...updates.profile };
+    if (fullName) user.fullName = fullName;
+    if (phone !== undefined) user.phone = phone; // Allow empty string to clear phone
+    
+    if (profile) {
+      user.profile = { 
+        ...(user.profile?.toObject ? user.profile.toObject() : (user.profile || {})), 
+        ...profile 
+      };
       // Check if profile is complete
       const p = user.profile;
-      if (updates.profile.isProfileComplete !== undefined) {
-        user.profile.isProfileComplete = updates.profile.isProfileComplete;
+      if (profile.isProfileComplete !== undefined) {
+        user.profile.isProfileComplete = profile.isProfileComplete;
       } else {
         user.profile.isProfileComplete = !!(p.currentSkillLevel && p.goal);
       }
@@ -224,14 +233,13 @@ exports.updateProfile = async (req, res) => {
 
     await user.save();
 
-    // AI roadmap generation has been fully migrated to aiController.js
-
     res.json({
       success: true,
       user: {
         _id: user._id,
         fullName: user.fullName,
         email: user.email,
+        phone: user.phone,
         role: user.role,
         profile: user.profile,
         currentPhase: user.currentPhase,
@@ -243,34 +251,3 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// @desc    Update user profile
-// @route   PUT /api/auth/profile
-exports.updateProfile = async (req, res) => {
-  try {
-    const { fullName, phone } = req.body;
-    
-    // Find and update user
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-
-    if (fullName) user.fullName = fullName;
-    if (phone !== undefined) user.phone = phone; // Allow empty string to clear phone
-
-    await user.save();
-
-    res.json({
-      success: true,
-      user: {
-        _id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        phone: user.phone,
-        role: user.role
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};

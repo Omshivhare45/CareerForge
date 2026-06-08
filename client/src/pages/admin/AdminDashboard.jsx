@@ -351,7 +351,8 @@ const AdminDashboard = () => {
 
   const filteredAndSortedFeedbacks = feedbacks
     .filter(f => {
-      const userObj = f.userId || {};
+      if (!f) return false;
+      const userObj = f.userId && typeof f.userId === 'object' ? f.userId : {};
       const fullName = userObj.fullName || 'Deleted User';
       const email = userObj.email || '';
 
@@ -912,7 +913,8 @@ const AdminDashboard = () => {
               <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                 {filteredAndSortedFeedbacks.length > 0 ? (
                   filteredAndSortedFeedbacks.map((f) => {
-                    const userObj = f.userId || {};
+                    if (!f) return null;
+                    const userObj = f.userId && typeof f.userId === 'object' ? f.userId : {};
                     const fullName = userObj.fullName || 'Deleted User';
                     const email = userObj.email || 'deleted@user.com';
                     const role = userObj.role || 'student';
