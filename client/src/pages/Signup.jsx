@@ -23,6 +23,13 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Strict email validation and normalization
+    const normalizedEmail = formData.email.trim().toLowerCase();
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      return toast.error('Please enter a valid email address');
+    }
+    
     if (formData.password !== formData.confirmPassword) {
       return toast.error('Passwords do not match');
     }
@@ -34,7 +41,7 @@ const Signup = () => {
     setIsLoading(true);
     try {
       const { confirmPassword, ...registerData } = formData;
-      registerData.email = registerData.email.trim();
+      registerData.email = normalizedEmail;
       const data = await register(registerData);
       toast.success('Account created successfully!');
       if (data.user.role === 'admin') {
@@ -68,6 +75,42 @@ const Signup = () => {
         </div>
 
         <div className="bg-white p-10 rounded-3xl shadow-xl border border-gray-100">
+          {/* Google Signup at the top */}
+          <div className="w-full flex flex-col items-center mb-6">
+            <GoogleLogin
+              onSuccess={async (credentialResponse) => {
+                setIsLoading(true);
+                try {
+                  const data = await googleLogin(credentialResponse.credential);
+                  toast.success('Welcome to CareerForge!');
+                  if (data.user.role === 'admin') navigate('/admin');
+                  else if (!data.user.activeDomain && !data.user.selectedDomain) navigate('/domains');
+                  else navigate('/dashboard');
+                } catch (error) {
+                  toast.error(error.response?.data?.message || 'Google signup failed');
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+              onError={() => {
+                toast.error('Google Sign-In failed');
+              }}
+              theme="filled_black"
+              shape="pill"
+              width="360"
+            />
+            <p className="text-[10px] text-gray-400 mt-2 font-bold text-center">Fastest & most secure way to sign up</p>
+          </div>
+
+          <div className="relative mb-6 text-center">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-100"></div>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-3 text-gray-400 font-extrabold tracking-wide">Or register with email</span>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-extrabold text-[var(--land-text)] mb-2 uppercase tracking-wide">Full Name</label>
@@ -149,40 +192,6 @@ const Signup = () => {
               )}
             </button>
           </form>
-
-          <div className="relative my-6 text-center">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-100"></div>
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-3 text-gray-400 font-extrabold tracking-wide">Or continue with</span>
-            </div>
-          </div>
-
-          <div className="w-full flex justify-center">
-            <GoogleLogin
-              onSuccess={async (credentialResponse) => {
-                setIsLoading(true);
-                try {
-                  const data = await googleLogin(credentialResponse.credential);
-                  toast.success('Welcome to CareerForge!');
-                  if (data.user.role === 'admin') navigate('/admin');
-                  else if (!data.user.activeDomain && !data.user.selectedDomain) navigate('/domains');
-                  else navigate('/dashboard');
-                } catch (error) {
-                  toast.error(error.response?.data?.message || 'Google signup failed');
-                } finally {
-                  setIsLoading(false);
-                }
-              }}
-              onError={() => {
-                toast.error('Google Sign-In failed');
-              }}
-              theme="filled_black"
-              shape="pill"
-              width="360"
-            />
-          </div>
 
           <div className="mt-8 pt-8 border-t border-gray-100 text-center">
             <p className="text-[var(--land-nav)] font-bold">

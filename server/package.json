@@ -21,7 +21,8 @@
     "check:progress": "node scripts/checkUserProgress.js",
     "verify:phases": "node scripts/verifyAllPhases.js",
     "test:progression": "node scripts/testPhaseProgression.js",
-    "check:xp": "node scripts/checkXP.js"
+    "check:xp": "node scripts/checkXP.js",
+    "report:invalid-emails": "node scripts/reportInvalidEmails.js"
   },
   "keywords": [
     "careerforge",

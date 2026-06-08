@@ -21,9 +21,15 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const normalizedEmail = email.trim().toLowerCase();
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      return toast.error('Please enter a valid email address');
+    }
+
     setIsLoading(true);
     try {
-      const data = await login(email.trim(), password.trim());
+      const data = await login(normalizedEmail, password.trim());
       toast.success('Welcome back!');
       if (data.user.role === 'admin') navigate('/admin');
       else if (!data.user.activeDomain && !data.user.selectedDomain) navigate('/domains');
@@ -54,6 +60,42 @@ const Login = () => {
         </div>
 
         <div className="bg-white p-10 rounded-3xl shadow-xl border border-gray-100">
+          {/* Google Login at the top */}
+          <div className="w-full flex flex-col items-center mb-6">
+            <GoogleLogin
+              onSuccess={async (credentialResponse) => {
+                setIsLoading(true);
+                try {
+                  const data = await googleLogin(credentialResponse.credential);
+                  toast.success('Welcome back!');
+                  if (data.user.role === 'admin') navigate('/admin');
+                  else if (!data.user.activeDomain && !data.user.selectedDomain) navigate('/domains');
+                  else navigate('/dashboard');
+                } catch (error) {
+                  toast.error(error.response?.data?.message || 'Google login failed');
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+              onError={() => {
+                toast.error('Google Sign-In failed');
+              }}
+              theme="filled_black"
+              shape="pill"
+              width="360"
+            />
+            <p className="text-[10px] text-gray-400 mt-2 font-bold text-center">Fastest & most secure way to sign in</p>
+          </div>
+
+          <div className="relative mb-6 text-center">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-100"></div>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-3 text-gray-400 font-extrabold tracking-wide">Or sign in with email</span>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-extrabold text-[var(--land-text)] mb-2 uppercase tracking-wide">Email address</label>
@@ -99,40 +141,6 @@ const Login = () => {
               )}
             </button>
           </form>
-
-          <div className="relative my-6 text-center">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-100"></div>
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-3 text-gray-400 font-extrabold tracking-wide">Or continue with</span>
-            </div>
-          </div>
-
-          <div className="w-full flex justify-center">
-            <GoogleLogin
-              onSuccess={async (credentialResponse) => {
-                setIsLoading(true);
-                try {
-                  const data = await googleLogin(credentialResponse.credential);
-                  toast.success('Welcome back!');
-                  if (data.user.role === 'admin') navigate('/admin');
-                  else if (!data.user.activeDomain && !data.user.selectedDomain) navigate('/domains');
-                  else navigate('/dashboard');
-                } catch (error) {
-                  toast.error(error.response?.data?.message || 'Google login failed');
-                } finally {
-                  setIsLoading(false);
-                }
-              }}
-              onError={() => {
-                toast.error('Google Sign-In failed');
-              }}
-              theme="filled_black"
-              shape="pill"
-              width="360"
-            />
-          </div>
 
           <div className="mt-8 pt-8 border-t border-gray-100 text-center">
             <p className="text-[var(--land-nav)] font-bold">

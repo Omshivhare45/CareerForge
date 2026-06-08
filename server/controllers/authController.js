@@ -3,6 +3,11 @@ const { OAuth2Client } = require('google-auth-library');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+const validateEmailFormat = (email) => {
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(email);
+};
+
 
 // @desc    Register user
 // @route   POST /api/auth/register
@@ -10,16 +15,26 @@ exports.register = async (req, res) => {
   try {
     const { fullName, email, password, role } = req.body;
     
-    const existingUser = await User.findOne({ email });
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Please provide an email address' });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!validateEmailFormat(normalizedEmail)) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid email address' });
+    }
+
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'Email already registered' });
     }
 
     const user = await User.create({
       fullName,
-      email,
+      email: normalizedEmail,
       password,
-      role: email === 'omshivhare666@gmail.com' ? 'admin' : (role === 'admin' ? 'student' : (role || 'student')) // Grant admin only to specific email
+      role: normalizedEmail === 'omshivhare666@gmail.com' ? 'admin' : (role === 'admin' ? 'student' : (role || 'student')) // Grant admin only to specific email
     });
 
     const token = user.generateToken();
@@ -50,9 +65,15 @@ exports.login = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please provide email and password' });
     }
 
-    const user = await User.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!validateEmailFormat(normalizedEmail)) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid email address' });
+    }
+
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      return res.status(401).json({ success: false, message: 'Invalid credentials' }); 
     }
 
     const isMatch = await user.matchPassword(password);
@@ -109,12 +130,14 @@ exports.googleLogin = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Google token payload is missing email' });
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     // Check if user already exists with this googleId
     let user = await User.findOne({ googleId });
 
     if (!user) {
       // Check if user already exists with this email (to link local account)
-      user = await User.findOne({ email });
+      user = await User.findOne({ email: normalizedEmail });
       if (user) {
         user.googleId = googleId;
         user.provider = 'google';
@@ -126,11 +149,11 @@ exports.googleLogin = async (req, res) => {
         // Auto-create new student account
         user = await User.create({
           fullName: name || 'Google User',
-          email,
+          email: normalizedEmail,
           googleId,
           provider: 'google',
           avatar: picture || '',
-          role: email === 'omshivhare666@gmail.com' ? 'admin' : 'student'
+          role: normalizedEmail === 'omshivhare666@gmail.com' ? 'admin' : 'student'
         });
       }
     }
