@@ -36,6 +36,8 @@ const cloudCredits = [
 ];
 async function seedDB() {
   try {
+    const isProduction = process.env.NODE_ENV === 'production';
+
     if (mongoose.connection.readyState === 0) {
       const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/careerforge';
       await mongoose.connect(uri);
@@ -44,34 +46,58 @@ async function seedDB() {
       console.log('✅ Already connected to MongoDB');
     }
 
+    // Safety check for production
+    if (isProduction) {
+      const userCount = await User.countDocuments();
+      const domainCount = await Domain.countDocuments();
+      if (userCount > 0 || domainCount > 0) {
+        console.error('❌ [Safety Block] Seeding is aborted in production because the database is not empty.');
+        console.error(`📊 Users: ${userCount}, Domains: ${domainCount}`);
+        throw new Error('Database seeding blocked in production to prevent data loss/corruption.');
+      }
+    }
+
     // Clear existing data
-    await Promise.all([
-      User.deleteMany({}),
+    const modelsToClear = [
       Domain.deleteMany({}),
       Phase.deleteMany({}),
       Topic.deleteMany({}),
       Assessment.deleteMany({}),
       Badge.deleteMany({}),
       CloudCredit.deleteMany({}),
-      Problem.deleteMany({}),
-      Submission.deleteMany({}),
-      UserProgress.deleteMany({})
-    ]);
-    console.log('🗑️  Cleared existing data');
+      Problem.deleteMany({})
+    ];
+
+    if (!isProduction) {
+      console.log('🗑️  Clearing user data (Non-production environment)...');
+      modelsToClear.push(User.deleteMany({}));
+      modelsToClear.push(Submission.deleteMany({}));
+      modelsToClear.push(UserProgress.deleteMany({}));
+    } else {
+      console.log('⚠️  Production environment: Retaining all user data!');
+    }
+
+    await Promise.all(modelsToClear);
+    console.log('🗑️  Cleared existing static data');
 
     // Seed cloud credits
     await CloudCredit.insertMany(cloudCredits);
     console.log('☁️  Cloud credits seeded');
 
-    // Seed admin user
-    const adminPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'Admin@123', 12);
-    await User.create({
-      fullName: 'CareerForge Admin',
-      email: process.env.ADMIN_EMAIL || 'admin@careerforge.com',
-      password: process.env.ADMIN_PASSWORD || 'Admin@123',
-      role: 'admin'
-    });
-    console.log('👤 Admin user created');
+    // Seed admin user (only if not already existing)
+    const adminEmail = (process.env.ADMIN_EMAIL || 'admin@careerforge.com').toLowerCase().trim();
+    const existingAdmin = await User.findOne({ email: adminEmail });
+    if (!existingAdmin) {
+      await User.create({
+        fullName: 'CareerForge Admin',
+        email: adminEmail,
+        password: process.env.ADMIN_PASSWORD || 'Admin@123',
+        role: 'admin'
+      });
+      console.log('👤 Admin user created');
+    } else {
+      console.log('👤 Admin user already exists');
+    }
 
     // Seed domains and their phases/topics
     for (const domainInfo of domainData) {

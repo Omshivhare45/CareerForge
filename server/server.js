@@ -119,14 +119,16 @@ const startServer = async () => {
       try {
         const Domain = require('./models/Domain');
         const domainCount = await Domain.countDocuments();
-        if (domainCount === 0) {
+        if (domainCount === 0 && process.env.NODE_ENV !== 'production') {
           console.log('🌱 Database is empty. Running auto-seed...');
           const seedDB = require('./seeds/seedAll');
           await seedDB();
           console.log('✅ Auto-seed completed!\n');
+        } else if (domainCount === 0 && process.env.NODE_ENV === 'production') {
+          console.log('⚠️ [Warning] Database is empty in production, but auto-seed is skipped to prevent accidental data loss/corruption.');
         }
       } catch (err) {
-        console.error('❌ Auto-seed failed:', err.message);
+        console.error('❌ Auto-seed check/execution failed:', err.message);
       }
     });
   } catch (err) {

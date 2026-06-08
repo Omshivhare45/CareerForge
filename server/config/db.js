@@ -36,6 +36,11 @@ const connectDB = async () => {
   } catch (error) {
     console.error(`MongoDB connection error: ${error.message}`);
 
+    if (process.env.NODE_ENV === 'production') {
+      console.error('❌ Connection failed in production. Crashing server to prevent silent data loss.');
+      process.exit(1);
+    }
+
     if (!mongoServer) {
       console.log('Local MongoDB connection failed. Falling back to in-memory DB...');
       try {
