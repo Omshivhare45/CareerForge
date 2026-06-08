@@ -30,8 +30,14 @@ const AdminDashboard = () => {
   const [topics, setTopics] = useState([]);
   const [assessments, setAssessments] = useState([]);
   
-  const [activeTab, setActiveTab] = useState('users'); // 'users' | 'domains' | 'topics' | 'assessments'
+  const [activeTab, setActiveTab] = useState('users'); // 'users' | 'domains' | 'topics' | 'assessments' | 'feedback'
   const [loading, setLoading] = useState(true);
+
+  // Feedback System State
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [feedbackSearchQuery, setFeedbackSearchQuery] = useState('');
+  const [feedbackRatingFilter, setFeedbackRatingFilter] = useState('all');
+  const [feedbackSortKey, setFeedbackSortKey] = useState('date');
   
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -81,14 +87,16 @@ const AdminDashboard = () => {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [statsRes, usersRes, domainsRes] = await Promise.all([
+      const [statsRes, usersRes, domainsRes, feedbackRes] = await Promise.all([
         api.get('/admin/stats'),
         api.get('/admin/users'),
-        api.get('/domains')
+        api.get('/domains'),
+        api.get('/feedback')
       ]);
       setStats(statsRes.data.data);
       setUsers(usersRes.data.data || []);
       setDomains(domainsRes.data.data || []);
+      setFeedbacks(feedbackRes.data.data || []);
     } catch (err) {
       console.error(err);
       toast.error('Failed to load administration workspace data');
@@ -305,6 +313,68 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleToggleFeedbackApproval = async (id) => {
+    const loadingToast = toast.loading("Updating feedback visibility...");
+    try {
+      const res = await api.patch(`/feedback/${id}/toggle-approve`);
+      if (res.data.success) {
+        toast.success(res.data.message || "Approval status updated!", { id: loadingToast });
+        setFeedbacks(feedbacks.map(f => f._id === id ? { ...f, isApproved: res.data.data.isApproved } : f));
+      }
+    } catch (err) {
+      toast.error("Failed to update feedback status", { id: loadingToast });
+    }
+  };
+
+  const handleDeleteFeedback = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this feedback review permanently?")) return;
+    const loadingToast = toast.loading("Deleting feedback review...");
+    try {
+      const res = await api.delete(`/feedback/${id}`);
+      if (res.data.success) {
+        toast.success("Feedback review deleted successfully", { id: loadingToast });
+        setFeedbacks(feedbacks.filter(f => f._id !== id));
+      }
+    } catch (err) {
+      toast.error("Failed to delete feedback review", { id: loadingToast });
+    }
+  };
+
+  const handleViewUserProfile = (userId) => {
+    const fullUser = users.find(u => u._id === userId);
+    if (fullUser) {
+      openPersonalizeDrawer(fullUser);
+    } else {
+      toast.error("User profile details not found in active list");
+    }
+  };
+
+  const filteredAndSortedFeedbacks = feedbacks
+    .filter(f => {
+      const userObj = f.userId || {};
+      const fullName = userObj.fullName || 'Deleted User';
+      const email = userObj.email || '';
+
+      const matchesSearch =
+        fullName.toLowerCase().includes(feedbackSearchQuery.toLowerCase()) ||
+        email.toLowerCase().includes(feedbackSearchQuery.toLowerCase());
+
+      const matchesRating = feedbackRatingFilter === 'all' || f.rating === Number(feedbackRatingFilter);
+
+      return matchesSearch && matchesRating;
+    })
+    .sort((a, b) => {
+      if (feedbackSortKey === 'rating') {
+        return b.rating - a.rating;
+      } else if (feedbackSortKey === 'domain') {
+        const domainA = a.userId?.activeDomain?.name || 'Unselected';
+        const domainB = b.userId?.activeDomain?.name || 'Unselected';
+        return domainA.localeCompare(domainB);
+      } else {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      }
+    });
+
   const filteredUsers = users.filter(user => {
     const matchesSearch = 
       user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -367,6 +437,12 @@ const AdminDashboard = () => {
                 className={`px-4 py-2 rounded-lg text-xs font-black transition-all ${activeTab === 'assessments' ? 'bg-emerald-600 dark:bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
               >
                 📝 Assign Assessments
+              </button>
+              <button
+                onClick={() => setActiveTab('feedback')}
+                className={`px-4 py-2 rounded-lg text-xs font-black transition-all ${activeTab === 'feedback' ? 'bg-emerald-600 dark:bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
+              >
+                ⭐ User Feedback
               </button>
             </div>
             <Link
@@ -767,6 +843,172 @@ const AdminDashboard = () => {
                 No milestone assessments assigned yet. Click "Assign Assessment" to begin!
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'feedback' && (
+        <div className="admin-panel bg-white dark:bg-slate-900/40 border border-slate-150 dark:border-white/5 rounded-3xl p-6 shadow-md dark:shadow-xl space-y-6">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-slate-100 dark:border-white/5 pb-5">
+            <div>
+              <h3 className="text-lg font-black text-slate-800 dark:text-white">User Reviews & Feedback</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Analyze and moderate testimonials provided by CareerForge students</p>
+            </div>
+
+            {/* Filters and Sorting Console */}
+            <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+              {/* Search Bar */}
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950/45 border border-slate-200 dark:border-white/5 px-3 py-1.5 rounded-xl text-xs w-full sm:w-48 focus-within:border-emerald-600 dark:focus-within:border-indigo-500 transition-colors">
+                <FiSearch className="text-slate-400 shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Search name/email..."
+                  value={feedbackSearchQuery}
+                  onChange={(e) => setFeedbackSearchQuery(e.target.value)}
+                  className="bg-transparent border-none outline-none text-xs w-full text-slate-700 dark:text-slate-350 placeholder:text-slate-400"
+                />
+              </div>
+
+              {/* Rating Filter */}
+              <select
+                value={feedbackRatingFilter}
+                onChange={(e) => setFeedbackRatingFilter(e.target.value)}
+                className="bg-slate-50 dark:bg-slate-950/45 border border-slate-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-slate-700 dark:text-slate-300 font-bold focus:outline-none focus:border-emerald-650 dark:focus:border-indigo-500"
+              >
+                <option value="all">⭐ Filter: All Ratings</option>
+                <option value="5">5 Stars</option>
+                <option value="4">4 Stars</option>
+                <option value="3">3 Stars</option>
+                <option value="2">2 Stars</option>
+                <option value="1">1 Star</option>
+              </select>
+
+              {/* Sort By Dropdown */}
+              <select
+                value={feedbackSortKey}
+                onChange={(e) => setFeedbackSortKey(e.target.value)}
+                className="bg-slate-50 dark:bg-slate-950/45 border border-slate-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs text-slate-700 dark:text-slate-300 font-bold focus:outline-none focus:border-emerald-650 dark:focus:border-indigo-500"
+              >
+                <option value="date">📅 Sort: Latest Date</option>
+                <option value="rating">⭐ Sort: Highest Rating</option>
+                <option value="domain">🚀 Sort: Active Domain</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Feedback Reviews Table */}
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-slate-950/20">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-white/5 bg-slate-100/70 dark:bg-slate-950/40 text-[10px] font-black text-slate-550 dark:text-slate-400 uppercase tracking-widest">
+                  <th className="p-4">User Details</th>
+                  <th className="p-4">Track Detail</th>
+                  <th className="p-4">Rating Given</th>
+                  <th className="p-4">Written Feedback</th>
+                  <th className="p-4">Submission Date</th>
+                  <th className="p-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                {filteredAndSortedFeedbacks.length > 0 ? (
+                  filteredAndSortedFeedbacks.map((f) => {
+                    const userObj = f.userId || {};
+                    const fullName = userObj.fullName || 'Deleted User';
+                    const email = userObj.email || 'deleted@user.com';
+                    const role = userObj.role || 'student';
+                    const avatar = userObj.avatar || '';
+                    const domainName = userObj.activeDomain?.name || 'No Selected Specialization';
+
+                    return (
+                      <tr key={f._id} className="hover:bg-slate-100/50 dark:hover:bg-slate-900/30 transition-colors">
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            {avatar ? (
+                              <img src={avatar} alt={fullName} className="w-10 h-10 rounded-xl object-cover border border-slate-200 dark:border-white/5" />
+                            ) : (
+                              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-indigo-600/20 border border-emerald-100 dark:border-indigo-500/20 text-emerald-700 dark:text-indigo-400 font-black text-sm flex items-center justify-center">
+                                {fullName.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <div>
+                              <span className="font-bold text-slate-800 dark:text-white text-xs block">{fullName}</span>
+                              <span className="text-[10px] text-slate-500 font-medium block mt-0.5">{email}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div className="space-y-1">
+                            <span className="text-[10px] font-black uppercase bg-slate-100 dark:bg-slate-800/40 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded border border-slate-200 dark:border-white/5 block w-max">
+                              {role}
+                            </span>
+                            <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 block truncate max-w-[150px]">
+                              🚀 {domainName}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex text-amber-500">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <FiStar key={i} className={`w-3.5 h-3.5 ${i < f.rating ? 'fill-amber-500' : 'text-slate-305 dark:text-slate-700'}`} />
+                            ))}
+                          </div>
+                        </td>
+                        <td className="p-4 max-w-xs sm:max-w-md">
+                          <p className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed whitespace-pre-wrap">
+                            {f.feedbackText}
+                          </p>
+                        </td>
+                        <td className="p-4 text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                          {new Date(f.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="p-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {/* Toggle Approval */}
+                            <button
+                              onClick={() => handleToggleFeedbackApproval(f._id)}
+                              className={`px-2.5 py-1 text-[10px] font-black rounded-lg border transition-all ${
+                                f.isApproved
+                                  ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-450 border-emerald-100 dark:border-emerald-900/30 hover:bg-emerald-600 hover:text-white'
+                                  : 'bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-450 border-amber-100 dark:border-amber-900/30 hover:bg-amber-600 hover:text-white'
+                              }`}
+                              title={f.isApproved ? 'Approved (Click to Hide)' : 'Hidden (Click to Approve)'}
+                            >
+                              {f.isApproved ? 'Approved' : 'Hidden'}
+                            </button>
+
+                            {/* View User Profile */}
+                            {f.userId && (
+                              <button
+                                onClick={() => handleViewUserProfile(f.userId._id)}
+                                className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-indigo-600/10 text-emerald-700 dark:text-indigo-400 border border-emerald-100 dark:border-indigo-500/10 flex items-center justify-center text-xs hover:bg-emerald-650 dark:hover:bg-indigo-600 hover:text-white transition-all"
+                                title="View User Profile"
+                              >
+                                <FiEye />
+                              </button>
+                            )}
+
+                            {/* Delete */}
+                            <button
+                              onClick={() => handleDeleteFeedback(f._id)}
+                              className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-550/10 dark:border-rose-500/10 flex items-center justify-center text-xs hover:bg-rose-500 hover:text-white hover:bg-rose-650 transition-all"
+                              title="Delete Feedback"
+                            >
+                              <FiTrash2 />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="p-12 text-center text-slate-500 dark:text-slate-550 text-xs font-black bg-slate-50/50 dark:bg-slate-950/20">
+                      No user feedback records matched your query.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       )}

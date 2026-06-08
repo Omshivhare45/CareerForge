@@ -22,6 +22,7 @@ import Resources from './pages/Resources';
 import CareerGuide from './pages/CareerGuide';
 import ZeroToCoding from './pages/ZeroToCoding';
 import Profile from './pages/Profile';
+import Feedback from './pages/Feedback';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -59,6 +60,7 @@ function App() {
               <Route path="/career-guide" element={<CareerGuide />} />
               <Route path="/zero-to-coding" element={<ZeroToCoding />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/feedback" element={<Feedback />} />
             </Route>
           </Route>
 

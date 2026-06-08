@@ -5,7 +5,7 @@ import logoImg from '../assets/logo.png';
 import { 
   FiMenu, FiX, FiBell, FiSearch, FiSun, FiMoon, FiLogOut, FiSettings,
   FiMap, FiList, FiCheckSquare, FiMessageSquare, FiGift, FiBookOpen, FiZap, FiUsers,
-  FiEye, FiShield, FiDownload
+  FiEye, FiShield, FiDownload, FiStar
 } from 'react-icons/fi';
 import { MdOutlineDashboard } from "react-icons/md";
 
@@ -87,6 +87,7 @@ const Navbar = ({ isAdmin }) => {
     { name: 'Roadmaps', path: '/roadmap', icon: <FiMap /> },
     { name: 'Domains', path: '/domains', icon: <FiList /> },
     { name: 'Code Guru', path: '/code-guru', icon: <FiMessageSquare /> },
+    { name: 'Feedback', path: '/feedback', icon: <FiStar /> },
   ];
 
   const adminLinks = [
