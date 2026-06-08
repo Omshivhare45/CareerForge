@@ -103,6 +103,18 @@ const startServer = async () => {
       console.log(`📡 Environment: ${process.env.NODE_ENV}`);
       console.log(`🌐 Client URL: ${process.env.CLIENT_URL}\n`);
 
+      // User Collection Audit
+      try {
+        const User = require('./models/User');
+        const mongoose = require('mongoose');
+        const userCount = await User.countDocuments();
+        console.log(`📊 [Audit] Total Users in DB: ${userCount}`);
+        console.log(`📊 [Audit] Active Database: ${mongoose.connection.name}`);
+        console.log(`📊 [Audit] Collection Name: ${User.collection.name}\n`);
+      } catch (auditErr) {
+        console.error('❌ User Collection Audit failed:', auditErr.message);
+      }
+
       // Auto-seed if empty (useful for In-Memory DB)
       try {
         const Domain = require('./models/Domain');

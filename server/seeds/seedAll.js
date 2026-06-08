@@ -82,15 +82,20 @@ async function seedDB() {
       let phaseCount = 0;
 
       for (const phaseInfo of phases) {
+        // Shift phaseNumber to start at 0 if the domain is not already 0-indexed (like WebDev and DSA)
+        const needsShift = (domain.slug !== 'dsa' && domain.slug !== 'web-development');
+        const adjustedPhaseNumber = needsShift ? (phaseInfo.phaseNumber - 1) : phaseInfo.phaseNumber;
+
         const phase = await Phase.create({
           ...phaseInfo,
+          phaseNumber: adjustedPhaseNumber,
           domainId: domain._id,
-          order: phaseInfo.phaseNumber
+          order: adjustedPhaseNumber
         });
         phaseCount++;
 
-        // Add topics for this phase if available
-        const topicKey = `${domain.slug}:${phase.phaseNumber}`;
+        // Add topics for this phase if available (lookup using the original phaseNumber key)
+        const topicKey = `${domain.slug}:${phaseInfo.phaseNumber}`;
         const topics = topicData[topicKey] || [];
         for (const topicInfo of topics) {
           const topic = await Topic.create({ ...topicInfo, phaseId: phase._id, domainId: domain._id });

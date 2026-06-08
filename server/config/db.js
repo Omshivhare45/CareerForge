@@ -26,6 +26,11 @@ const connectDB = async () => {
 
     const conn = await connectWithTimeout(uri);
     console.log(`MongoDB connected: ${conn.connection.host}`);
+    
+    // Database Connection Audit
+    const maskedUri = uri ? uri.replace(/\/\/[^@]+@/, '//******@') : 'in-memory';
+    console.log(`📡 MongoDB Connection URI (masked): ${maskedUri}`);
+    console.log(`🗄️  Active Database Name: ${conn.connection.name}`);
 
     return { conn, isMemory: !!mongoServer };
   } catch (error) {

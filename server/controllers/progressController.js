@@ -29,7 +29,7 @@ const getSafeDomainProgress = (user, key) => {
   if (!user.domainsProgress[key]) {
     user.domainsProgress[key] = {
       xp: 0,
-      currentPhase: 1,
+      currentPhase: 0,
       overallProgress: 0,
       completedTopics: [],
       startedTopics: [],
@@ -126,8 +126,8 @@ exports.selectDomain = async (req, res) => {
     // Initialize domain-specific phase if not set
     const key = getProgressKey(domain.slug);
     if (user.domainsProgress && user.domainsProgress[key]) {
-      if (!user.domainsProgress[key].currentPhase || user.domainsProgress[key].currentPhase === 0) {
-        user.domainsProgress[key].currentPhase = 1;
+      if (user.domainsProgress[key].currentPhase === -1 || user.domainsProgress[key].currentPhase === undefined) {
+        user.domainsProgress[key].currentPhase = 0;
         domain.enrolledCount = (domain.enrolledCount || 0) + 1;
         await domain.save();
       }
@@ -409,7 +409,7 @@ exports.getDashboard = async (req, res) => {
     const key = activeDomain ? getProgressKey(activeDomain.slug) : 'dsa';
     const domainProgress = user.domainsProgress[key] || {
       xp: 0,
-      currentPhase: 1,
+      currentPhase: 0,
       overallProgress: 0,
       completedTopics: [],
       startedTopics: [],
@@ -438,7 +438,7 @@ exports.getDashboard = async (req, res) => {
     if (activeDomain) {
       currentPhaseData = await Phase.findOne({ 
         domainId: activeDomain._id, 
-        phaseNumber: domainProgress.currentPhase || 1
+        phaseNumber: (domainProgress.currentPhase !== undefined && domainProgress.currentPhase !== -1) ? domainProgress.currentPhase : 0
       });
 
       upcomingAssessment = await require('../models/Assessment').findOne({
@@ -459,7 +459,7 @@ exports.getDashboard = async (req, res) => {
           profile: user.profile,
           selectedDomain: activeDomain,
           activeDomain: activeDomain,
-          currentPhase: domainProgress.currentPhase || 1,
+          currentPhase: (domainProgress.currentPhase !== undefined && domainProgress.currentPhase !== -1) ? domainProgress.currentPhase : 0,
           overallProgress: domainProgress.overallProgress || 0,
           dailyStreak: user.dailyStreak,
           totalStudyMinutes: user.totalStudyMinutes,
