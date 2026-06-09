@@ -82,7 +82,7 @@ app.get('/api/health/seed-db-migration', async (req, res) => {
     const force = req.query.force === 'true';
     const secret = req.query.secret;
 
-    if (!secret || (secret !== process.env.JWT_SECRET && secret !== 'antigravity_seed_db_force')) {
+    if (!secret || secret !== process.env.JWT_SECRET) {
       return res.status(403).json({ success: false, message: 'Forbidden: Invalid migration secret key.' });
     }
 

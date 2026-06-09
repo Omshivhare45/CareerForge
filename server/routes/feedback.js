@@ -11,7 +11,7 @@ const {
 // Standard POST/GET
 router.route('/')
   .post(protect, submitFeedback)
-  .get(optionalProtect, getFeedback);
+  .get(protect, authorize('admin'), getFeedback);
 
 // Admin moderation actions
 router.route('/:id/toggle-approve')

@@ -57,31 +57,26 @@ async function seedDB(force = false) {
       }
     }
 
-    // Clear existing data
-    const modelsToClear = [
-      Domain.deleteMany({}),
-      Phase.deleteMany({}),
-      Topic.deleteMany({}),
-      Assessment.deleteMany({}),
-      Badge.deleteMany({}),
-      CloudCredit.deleteMany({}),
-      Problem.deleteMany({})
-    ];
-
+    // Clear existing user data in non-production environments if needed
     if (!isProduction) {
       console.log('🗑️  Clearing user data (Non-production environment)...');
-      modelsToClear.push(User.deleteMany({}));
-      modelsToClear.push(Submission.deleteMany({}));
-      modelsToClear.push(UserProgress.deleteMany({}));
+      await Promise.all([
+        User.deleteMany({}),
+        Submission.deleteMany({}),
+        UserProgress.deleteMany({})
+      ]);
     } else {
       console.log('⚠️  Production environment: Retaining all user data!');
     }
 
-    await Promise.all(modelsToClear);
-    console.log('🗑️  Cleared existing static data');
-
-    // Seed cloud credits
-    await CloudCredit.insertMany(cloudCredits);
+    // Seed cloud credits (upsert by title)
+    for (const credit of cloudCredits) {
+      await CloudCredit.findOneAndUpdate(
+        { title: credit.title },
+        credit,
+        { upsert: true, new: true }
+      );
+    }
     console.log('☁️  Cloud credits seeded');
 
     // Seed admin user (only if not already existing)
@@ -99,9 +94,13 @@ async function seedDB(force = false) {
       console.log('👤 Admin user already exists');
     }
 
-    // Seed domains and their phases/topics
+    // Seed domains and their phases/topics (upsert-based to preserve ObjectIds)
     for (const domainInfo of domainData) {
-      const domain = await Domain.create(domainInfo);
+      const domain = await Domain.findOneAndUpdate(
+        { slug: domainInfo.slug },
+        domainInfo,
+        { upsert: true, new: true }
+      );
       console.log(`📁 Domain: ${domain.name}`);
 
       const phases = phaseData[domain.slug] || [];
@@ -112,73 +111,97 @@ async function seedDB(force = false) {
         const needsShift = (domain.slug !== 'dsa' && domain.slug !== 'web-development');
         const adjustedPhaseNumber = needsShift ? (phaseInfo.phaseNumber - 1) : phaseInfo.phaseNumber;
 
-        const phase = await Phase.create({
-          ...phaseInfo,
-          phaseNumber: adjustedPhaseNumber,
-          domainId: domain._id,
-          order: adjustedPhaseNumber
-        });
+        const phase = await Phase.findOneAndUpdate(
+          { domainId: domain._id, phaseNumber: adjustedPhaseNumber },
+          {
+            ...phaseInfo,
+            phaseNumber: adjustedPhaseNumber,
+            domainId: domain._id,
+            order: adjustedPhaseNumber
+          },
+          { upsert: true, new: true }
+        );
         phaseCount++;
 
         // Add topics for this phase if available (lookup using the original phaseNumber key)
         const topicKey = `${domain.slug}:${phaseInfo.phaseNumber}`;
         const topics = topicData[topicKey] || [];
         for (const topicInfo of topics) {
-          const topic = await Topic.create({ ...topicInfo, phaseId: phase._id, domainId: domain._id });
+          const topic = await Topic.findOneAndUpdate(
+            { domainId: domain._id, phaseId: phase._id, title: topicInfo.title },
+            { ...topicInfo, phaseId: phase._id, domainId: domain._id },
+            { upsert: true, new: true }
+          );
           
           // Create topic completion badge (One video = One badge)
-          await Badge.create({
-            name: `${topic.title} Badge`,
-            description: `Completed "${topic.title}" in ${domain.name}`,
-            icon: '📜',
-            domainId: domain._id,
-            phaseId: phase._id,
-            topicId: topic._id,
-            type: 'topic-completion',
-            unlockCondition: `Complete the ${topic.title} topic`,
-            order: topic.order
-          });
+          await Badge.findOneAndUpdate(
+            { domainId: domain._id, phaseId: phase._id, topicId: topic._id, type: 'topic-completion' },
+            {
+              name: `${topic.title} Badge`,
+              description: `Completed "${topic.title}" in ${domain.name}`,
+              icon: '📜',
+              domainId: domain._id,
+              phaseId: phase._id,
+              topicId: topic._id,
+              type: 'topic-completion',
+              unlockCondition: `Complete the ${topic.title} topic`,
+              order: topic.order
+            },
+            { upsert: true, new: true }
+          );
         }
 
         // Add default assessment for each phase
-        await Assessment.create({
-          phaseId: phase._id,
-          domainId: domain._id,
-          title: `${phase.name} Assessment`,
-          description: `Assessment for ${phase.name}`,
-          type: 'custom',
-          platform: 'HackerRank',
-          assessmentLink: 'ADMIN_WILL_ADD_HACKERRANK_ASSESSMENT_LINK',
-          passingScore: 60,
-          difficultyRating: phase.phaseNumber <= 3 ? 'beginner' : phase.phaseNumber <= 7 ? 'intermediate' : 'advanced',
-          maxAttempts: 3,
-          unlocksNextPhase: true,
-          order: phase.phaseNumber
-        });
+        await Assessment.findOneAndUpdate(
+          { domainId: domain._id, phaseId: phase._id },
+          {
+            phaseId: phase._id,
+            domainId: domain._id,
+            title: `${phase.name} Assessment`,
+            description: `Assessment for ${phase.name}`,
+            type: 'custom',
+            platform: 'HackerRank',
+            assessmentLink: 'ADMIN_WILL_ADD_HACKERRANK_ASSESSMENT_LINK',
+            passingScore: 60,
+            difficultyRating: phase.phaseNumber <= 3 ? 'beginner' : phase.phaseNumber <= 7 ? 'intermediate' : 'advanced',
+            maxAttempts: 3,
+            unlocksNextPhase: true,
+            order: phase.phaseNumber
+          },
+          { upsert: true, new: true }
+        );
 
         // Add phase badge
-        await Badge.create({
-          name: `${phase.name} Badge`,
-          description: `Completed ${phase.name} in ${domain.name}`,
-          icon: '🏅',
-          domainId: domain._id,
-          phaseId: phase._id,
-          type: 'phase-completion',
-          unlockCondition: `Complete all topics in ${phase.name} and pass assessment`,
-          order: phase.phaseNumber
-        });
+        await Badge.findOneAndUpdate(
+          { domainId: domain._id, phaseId: phase._id, type: 'phase-completion' },
+          {
+            name: `${phase.name} Badge`,
+            description: `Completed ${phase.name} in ${domain.name}`,
+            icon: '🏅',
+            domainId: domain._id,
+            phaseId: phase._id,
+            type: 'phase-completion',
+            unlockCondition: `Complete all topics in ${phase.name} and pass assessment`,
+            order: phase.phaseNumber
+          },
+          { upsert: true, new: true }
+        );
       }
 
       // Domain completion badge
-      await Badge.create({
-        name: `${domain.name} Master`,
-        description: `Completed the entire ${domain.name} roadmap`,
-        icon: '🏆',
-        domainId: domain._id,
-        type: 'domain-completion',
-        unlockCondition: `Complete all ${phaseCount} phases in ${domain.name}`,
-        order: 999
-      });
+      await Badge.findOneAndUpdate(
+        { domainId: domain._id, type: 'domain-completion' },
+        {
+          name: `${domain.name} Master`,
+          description: `Completed the entire ${domain.name} roadmap`,
+          icon: '🏆',
+          domainId: domain._id,
+          type: 'domain-completion',
+          unlockCondition: `Complete all ${phaseCount} phases in ${domain.name}`,
+          order: 999
+        },
+        { upsert: true, new: true }
+      );
 
       // Update domain stats
       await Domain.findByIdAndUpdate(domain._id, { totalPhases: phaseCount });
@@ -194,7 +217,13 @@ async function seedDB(force = false) {
       { name: 'Backtracking Warrior', description: 'Mastered backtracking techniques', icon: '⚔️', type: 'special', unlockCondition: 'Complete checkpoint 15 of Recursion' },
       { name: 'Recursion Survivor', description: 'Completed all recursion challenges', icon: '👑', type: 'special', unlockCondition: 'Complete all 22 checkpoints' }
     ];
-    await Badge.insertMany(streakBadges);
+    for (const badgeInfo of streakBadges) {
+      await Badge.findOneAndUpdate(
+        { name: badgeInfo.name },
+        badgeInfo,
+        { upsert: true, new: true }
+      );
+    }
 
     // Seed problem bank (Admin problems)
     try {

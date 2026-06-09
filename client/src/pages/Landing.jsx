@@ -11,29 +11,9 @@ const Landing = () => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Testimonials State
-  const [testimonials, setTestimonials] = useState([]);
-  const [averageRating, setAverageRating] = useState(0);
-  const [totalReviews, setTotalReviews] = useState(0);
-  const [loadingTestimonials, setLoadingTestimonials] = useState(true);
-
   useEffect(() => {
     // Force light mode on public pages to prevent dark mode class leakage
     document.documentElement.classList.remove('dark');
-
-    const fetchTestimonials = async () => {
-      try {
-        const res = await api.get('/feedback');
-        setTestimonials(res.data.data || []);
-        setAverageRating(res.data.averageRating || 0);
-        setTotalReviews(res.data.totalReviews || 0);
-      } catch (err) {
-        console.error('Failed to load testimonials:', err);
-      } finally {
-        setLoadingTestimonials(false);
-      }
-    };
-    fetchTestimonials();
   }, []);
 
   // Removed auto-redirect useEffect to allow logged-in users to view the landing page
@@ -255,115 +235,6 @@ const Landing = () => {
           </div>
         </section>
 
-        {/* Testimonials and User Reviews Section */}
-        <section className="px-6 py-24 bg-white relative z-10 border-t border-gray-100">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-              <span className="text-xs font-black text-[var(--brand-green)] uppercase tracking-[0.2em] bg-[var(--brand-green-light)] px-3.5 py-1.5 rounded-full">
-                Student Testimonials
-              </span>
-              <h2 className="text-4xl md:text-5xl font-black text-[var(--land-text)] mt-4 mb-3">
-                Loved by <span className="text-[var(--brand-orange)]">Tech Learners</span>
-              </h2>
-              <p className="text-[var(--land-nav)] text-lg font-bold">
-                See how other students are building their dreams and sharing their honest reviews.
-              </p>
-            </div>
-
-            {loadingTestimonials ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-4 border-[var(--brand-green)] border-t-transparent"></div>
-              </div>
-            ) : (
-              <div className="space-y-12">
-                {totalReviews > 0 && (
-                  <div className="max-w-md mx-auto bg-gradient-to-br from-gray-50 to-emerald-50/20 border border-gray-200 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row items-center justify-center gap-6 text-center sm:text-left animate-fade-in">
-                    <div className="text-center shrink-0">
-                      <div className="text-5xl font-black text-[var(--land-text)] leading-none">{averageRating}</div>
-                      <div className="text-[10px] text-[var(--land-text-muted)] font-black uppercase tracking-wider mt-1">Average Score</div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex justify-center sm:justify-start text-xl text-amber-500">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <FiStar
-                            key={i}
-                            className={`w-5 h-5 ${
-                              i < Math.round(averageRating)
-                                ? 'fill-amber-500 text-amber-500'
-                                : 'text-gray-300'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <p className="text-sm font-bold text-[var(--land-text)]">
-                        Based on {totalReviews} Student Review{totalReviews > 1 ? 's' : ''}
-                      </p>
-                      <p className="text-xs text-[var(--land-text-muted)] font-medium">
-                        100% genuine reviews submitted by registered students.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {testimonials.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {testimonials.slice(0, 6).map((t) => {
-                      if (!t) return null;
-                      const userObj = t.userId && typeof t.userId === 'object' ? t.userId : {};
-                      const fullName = userObj.fullName || 'CareerForge Student';
-                      const avatar = userObj.avatar || '';
-
-                      return (
-                        <div
-                          key={t._id}
-                          className="bg-gray-50 border border-gray-150 rounded-3xl p-8 transition-all duration-300 hover:shadow-[var(--shadow-soft)] hover:-translate-y-1 flex flex-col justify-between"
-                        >
-                          <p className="text-[var(--land-text)] font-semibold text-sm leading-relaxed italic mb-6">
-                            "{t.feedbackText}"
-                          </p>
-
-                          <div className="flex items-center gap-3 border-t border-gray-200/60 pt-4 mt-auto">
-                            {avatar ? (
-                              <img
-                                src={avatar}
-                                alt={fullName}
-                                className="w-10 h-10 rounded-xl object-cover border border-gray-200"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 rounded-xl bg-emerald-100 text-[var(--brand-green)] flex items-center justify-center font-black text-sm border border-emerald-200 shadow-sm shrink-0">
-                                {fullName.charAt(0).toUpperCase()}
-                              </div>
-                            )}
-
-                            <div>
-                              <h4 className="font-extrabold text-[var(--land-text)] text-xs">
-                                {fullName}
-                              </h4>
-                              <div className="flex text-amber-500 gap-0.5 mt-0.5">
-                                {Array.from({ length: 5 }).map((_, i) => (
-                                  <FiStar
-                                    key={i}
-                                    className={`w-3.5 h-3.5 ${
-                                      i < t.rating ? 'fill-amber-500 text-amber-500' : 'text-gray-300'
-                                    }`}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center p-12 text-gray-400 font-bold bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
-                    No testimonials yet. Be the first student to submit feedback inside your dashboard!
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </section>
 
       </main>
 

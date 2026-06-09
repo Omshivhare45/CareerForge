@@ -163,42 +163,50 @@ async function seedAllDomains() {
       );
       console.log(`✅ Domain set: ${domain.name}`);
 
-      // Clear existing for this domain to avoid duplicates during re-seeding
-      await Phase.deleteMany({ domainId: domain._id });
-      await Topic.deleteMany({ domainId: domain._id });
-
       const phases = phaseData[domain.slug] || [];
       for (const phaseInfo of phases) {
-        const phase = await Phase.create({
-          ...phaseInfo,
-          domainId: domain._id,
-          order: phaseInfo.phaseNumber
-        });
+        const phase = await Phase.findOneAndUpdate(
+          { domainId: domain._id, phaseNumber: phaseInfo.phaseNumber },
+          {
+            ...phaseInfo,
+            domainId: domain._id,
+            order: phaseInfo.phaseNumber
+          },
+          { upsert: true, new: true }
+        );
         
         const topicKey = `${domain.slug}:${phase.phaseNumber}`;
         const topics = topicData[topicKey] || [];
         
         if (topics.length > 0) {
           for (const t of topics) {
-            await Topic.create({
-              ...t,
-              phaseId: phase._id,
-              domainId: domain._id,
-              isActive: true
-            });
+            await Topic.findOneAndUpdate(
+              { domainId: domain._id, phaseId: phase._id, title: t.title },
+              {
+                ...t,
+                phaseId: phase._id,
+                domainId: domain._id,
+                isActive: true
+              },
+              { upsert: true, new: true }
+            );
           }
         } else {
           // Default topic if none specified
-          await Topic.create({
-            title: `Intro to ${phase.name}`,
-            description: `Core concepts and foundations of ${phase.name}.`,
-            youtubeLink: 'https://www.youtube.com/watch?v=hcMzwfj824A',
-            estimatedTime: '1 hour',
-            phaseId: phase._id,
-            domainId: domain._id,
-            isActive: true,
-            order: 0
-          });
+          await Topic.findOneAndUpdate(
+            { domainId: domain._id, phaseId: phase._id, title: `Intro to ${phase.name}` },
+            {
+              title: `Intro to ${phase.name}`,
+              description: `Core concepts and foundations of ${phase.name}.`,
+              youtubeLink: 'https://www.youtube.com/watch?v=hcMzwfj824A',
+              estimatedTime: '1 hour',
+              phaseId: phase._id,
+              domainId: domain._id,
+              isActive: true,
+              order: 0
+            },
+            { upsert: true, new: true }
+          );
         }
       }
     }
