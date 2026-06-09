@@ -79,9 +79,16 @@ app.get('/api/health', (req, res) => {
 // Seed DB Migration trigger
 app.get('/api/health/seed-db-migration', async (req, res) => {
   try {
-    console.log('🔄 Manual seed trigger initiated...');
+    const force = req.query.force === 'true';
+    const secret = req.query.secret;
+
+    if (!secret || secret !== process.env.JWT_SECRET) {
+      return res.status(403).json({ success: false, message: 'Forbidden: Invalid migration secret key.' });
+    }
+
+    console.log(`🔄 Manual seed trigger initiated (force: ${force})...`);
     const seedDB = require('./seeds/seedAll');
-    await seedDB();
+    await seedDB(force);
     console.log('✅ Manual seed completed successfully');
     res.json({ success: true, message: 'Database successfully seeded!' });
   } catch (err) {

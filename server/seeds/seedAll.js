@@ -34,7 +34,7 @@ const cloudCredits = [
   { title: 'Render Free Tier', description: 'Free web services and databases', link: 'https://render.com/', platform: 'Render', icon: '⚡', category: 'hosting', order: 10 },
   { title: 'Railway Free Plan', description: 'Deploy apps with free monthly credits', link: 'https://railway.app/', platform: 'Railway', icon: '🚂', category: 'hosting', order: 11 }
 ];
-async function seedDB() {
+async function seedDB(force = false) {
   try {
     const isProduction = process.env.NODE_ENV === 'production';
 
@@ -47,7 +47,7 @@ async function seedDB() {
     }
 
     // Safety check for production
-    if (isProduction) {
+    if (isProduction && !force) {
       const userCount = await User.countDocuments();
       const domainCount = await Domain.countDocuments();
       if (userCount > 0 || domainCount > 0) {
