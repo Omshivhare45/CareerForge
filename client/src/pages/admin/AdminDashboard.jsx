@@ -19,7 +19,8 @@ import {
   FiTrendingUp,
   FiEdit,
   FiVideo,
-  FiFileText
+  FiFileText,
+  FiStar
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
