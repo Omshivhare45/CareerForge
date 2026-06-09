@@ -215,7 +215,8 @@ async function seedDB(force = false) {
 }
 
 if (require.main === module) {
-  seedDB()
+  const force = process.argv.includes('--force');
+  seedDB(force)
     .then(() => process.exit(0))
     .catch(() => process.exit(1));
 }
