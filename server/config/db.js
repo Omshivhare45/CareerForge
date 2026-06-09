@@ -17,7 +17,7 @@ const connectDB = async () => {
       process.exit(1);
     }
 
-    if (process.env.USE_MEMORY_DB === 'true' || !uri) {
+    if ((process.env.USE_MEMORY_DB === 'true' && !isProduction) || (!uri && !isProduction)) {
       console.log('Starting in-memory MongoDB server...');
       mongoServer = await MongoMemoryServer.create();
       uri = mongoServer.getUri();

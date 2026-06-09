@@ -153,11 +153,26 @@ const AdminDashboard = () => {
     }
   };
 
+  const getProgressKey = (slug) => {
+    if (!slug) return 'dsa';
+    const lowercaseSlug = slug.toLowerCase();
+    if (lowercaseSlug === 'web-development' || lowercaseSlug === 'webdev') return 'webdev';
+    if (lowercaseSlug === 'open-source' || lowercaseSlug === 'opensource') return 'opensource';
+    if (lowercaseSlug === 'devops') return 'devops';
+    if (lowercaseSlug === 'dsa') return 'dsa';
+    if (lowercaseSlug.includes('web') || lowercaseSlug.includes('ui-ux')) return 'webdev';
+    if (lowercaseSlug.includes('open') || lowercaseSlug.includes('git')) return 'opensource';
+    if (lowercaseSlug.includes('dsa') || lowercaseSlug.includes('data')) return 'dsa';
+    return 'devops';
+  };
+
   const openPersonalizeDrawer = (user) => {
     setSelectedUser(user);
-    setCustomXp(user.xp || 0);
-    setCustomProgress(user.overallProgress || 0);
-    setCustomPhase(user.currentPhase || 0);
+    const key = getProgressKey(user.activeDomain?.slug || user.selectedDomain?.slug);
+    const activeProg = user.domainsProgress?.[key] || {};
+    setCustomXp(activeProg.xp || 0);
+    setCustomProgress(activeProg.overallProgress || 0);
+    setCustomPhase(activeProg.currentPhase || 0);
   };
 
   const handleSaveProgress = async () => {
@@ -571,16 +586,26 @@ const AdminDashboard = () => {
                         )}
                       </td>
                       <td className="p-4 space-y-1.5">
-                        <div className="flex justify-between text-[10px] font-black">
-                          <span className="text-amber-600 dark:text-amber-400">{user.xp || 0} XP • Lvl {Math.floor((user.xp || 0) / 1000) + 1}</span>
-                          <span className="text-emerald-700 dark:text-indigo-400">{user.overallProgress || 0}% Complete</span>
-                        </div>
-                        <div className="w-32 h-1.5 bg-slate-200 dark:bg-slate-950/80 rounded-full overflow-hidden border border-slate-300/40 dark:border-white/5">
-                          <div 
-                            className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 dark:from-indigo-500 dark:to-indigo-400 transition-all duration-300"
-                            style={{ width: `${user.overallProgress || 0}%` }}
-                          ></div>
-                        </div>
+                        {(() => {
+                          const key = getProgressKey(user.activeDomain?.slug || user.selectedDomain?.slug);
+                          const activeProg = user.domainsProgress?.[key] || {};
+                          const xp = activeProg.xp || 0;
+                          const overallProgress = activeProg.overallProgress || 0;
+                          return (
+                            <>
+                              <div className="flex justify-between text-[10px] font-black">
+                                <span className="text-amber-600 dark:text-amber-400">{xp} XP • Lvl {Math.floor(xp / 1000) + 1}</span>
+                                <span className="text-emerald-700 dark:text-indigo-400">{overallProgress}% Complete</span>
+                              </div>
+                              <div className="w-32 h-1.5 bg-slate-200 dark:bg-slate-950/80 rounded-full overflow-hidden border border-slate-300/40 dark:border-white/5">
+                                <div 
+                                  className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 dark:from-indigo-500 dark:to-indigo-400 transition-all duration-300"
+                                  style={{ width: `${overallProgress}%` }}
+                                ></div>
+                              </div>
+                            </>
+                          );
+                        })()}
                       </td>
                       <td className="p-4">
                         {user.profile?.collegeName ? (
