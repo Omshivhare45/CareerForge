@@ -194,7 +194,7 @@ exports.getMe = async (req, res) => {
     const user = await User.findById(req.user._id)
       .select('-password')
       .populate('activeDomain')
-      .populate('earnedBadges.badgeId')
+      .populate({ path: 'earnedBadges.badgeId', populate: { path: 'domainId' } })
       .populate('assignedMentor', 'fullName email');
 
     res.json({ success: true, user });

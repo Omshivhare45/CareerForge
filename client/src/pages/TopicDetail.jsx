@@ -3455,17 +3455,21 @@ const TopicDetail = () => {
 
               {/* Newly Earned Badges Section */}
               {celebrationData.newlyEarnedBadges && celebrationData.newlyEarnedBadges.length > 0 && (
-                <div className="w-full p-4 bg-amber-500/10 border border-amber-500/25 rounded-2xl text-center space-y-3 relative z-10">
+                <div className="w-full p-4 bg-slate-900/60 border border-white/5 rounded-2xl text-center space-y-3 relative z-10">
                   <div className="text-[9px] text-amber-500 font-black uppercase tracking-widest">
                     🎉 New Badges Unlocked!
                   </div>
                   <div className="flex flex-wrap justify-center gap-3">
-                    {celebrationData.newlyEarnedBadges.map((badge, idx) => (
-                      <div key={idx} className="flex flex-col items-center gap-0.5 max-w-[85px] bg-[var(--bg-sub)] p-2 rounded-xl border border-[var(--border)]">
-                        <div className="text-3xl filter drop-shadow animate-pulse">{badge.icon || '🏅'}</div>
-                        <div className="text-[8px] font-black text-[var(--text-main)] truncate w-full mt-1">{badge.name}</div>
-                      </div>
-                    ))}
+                    {celebrationData.newlyEarnedBadges.map((badge, idx) => {
+                      const metadata = getBadgeMetadata(badge);
+                      return (
+                        <div key={idx} className="flex flex-col items-center gap-1 p-2 rounded-xl bg-slate-950/45 border border-white/5 max-w-[90px] text-center">
+                          <BadgeVisual badge={badge} size="sm" />
+                          <div className="text-[8px] font-black text-white truncate w-full mt-1">{badge.name}</div>
+                          <div className={`text-[6px] font-black tracking-wider uppercase ${metadata.rarity.textColor}`}>{metadata.rarity.name}</div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

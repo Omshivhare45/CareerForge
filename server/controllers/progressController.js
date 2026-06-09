@@ -403,7 +403,7 @@ exports.getDashboard = async (req, res) => {
     const user = await User.findById(req.user._id)
       .select('-password')
       .populate('activeDomain')
-      .populate('earnedBadges.badgeId');
+      .populate({ path: 'earnedBadges.badgeId', populate: { path: 'domainId' } });
 
     const activeDomain = user.activeDomain;
     const key = activeDomain ? getProgressKey(activeDomain.slug) : 'dsa';
