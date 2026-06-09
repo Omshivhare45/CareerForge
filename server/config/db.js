@@ -36,18 +36,21 @@ const connectDB = async () => {
   } catch (error) {
     console.error(`MongoDB connection error: ${error.message}`);
 
-    if (process.env.NODE_ENV === 'production') {
-      console.error('❌ Connection failed in production. Crashing server to prevent silent data loss.');
+    const isProduction = process.env.NODE_ENV === 'production';
+    const uri = process.env.MONGODB_URI || process.env.MONGO_URI;
+
+    if (isProduction || uri) {
+      console.error('❌ MongoDB connection failed. Crashing server to prevent silent data loss.');
       process.exit(1);
     }
 
     if (!mongoServer) {
-      console.log('Local MongoDB connection failed. Falling back to in-memory DB...');
+      console.log('No MongoDB URI provided. Falling back to in-memory DB...');
       try {
         mongoServer = await MongoMemoryServer.create();
-        const uri = mongoServer.getUri();
-        const conn = await connectWithTimeout(uri);
-        console.log(`In-memory MongoDB connected at ${uri}`);
+        const memoryUri = mongoServer.getUri();
+        const conn = await connectWithTimeout(memoryUri);
+        console.log(`In-memory MongoDB connected at ${memoryUri}`);
         return { conn, isMemory: true };
       } catch (memErr) {
         console.error(`In-memory DB error: ${memErr.message}`);

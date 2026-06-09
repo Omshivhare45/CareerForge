@@ -1065,6 +1065,40 @@ const AdminDashboard = () => {
                 </button>
               </div>
 
+              {/* Active Specialization & Progress Overview */}
+              <div className="bg-slate-50 dark:bg-slate-950/45 border border-slate-200 dark:border-white/5 rounded-2xl p-4 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">Specialization</span>
+                  {selectedUser.selectedDomain ? (
+                    <span className="text-[10px] font-black text-emerald-700 dark:text-indigo-400 bg-emerald-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded border border-emerald-100 dark:border-indigo-900/30">
+                      🚀 {selectedUser.selectedDomain.name}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-slate-500 font-bold uppercase">Unselected</span>
+                  )}
+                </div>
+                {(() => {
+                  const key = getProgressKey(selectedUser.activeDomain?.slug || selectedUser.selectedDomain?.slug);
+                  const activeProg = selectedUser.domainsProgress?.[key] || {};
+                  const xp = activeProg.xp || 0;
+                  const overallProgress = activeProg.overallProgress || 0;
+                  return (
+                    <div className="space-y-1.5 pt-1">
+                      <div className="flex justify-between text-[10px] font-black">
+                        <span className="text-amber-650 dark:text-amber-400">{xp} XP • Level {Math.floor(xp / 1000) + 1}</span>
+                        <span className="text-slate-700 dark:text-slate-350">{overallProgress}% Completed</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 dark:from-indigo-500 dark:to-indigo-400"
+                          style={{ width: `${overallProgress}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
               {/* Progress & Personalization Slider Console */}
               <div className="bg-emerald-50/50 dark:bg-indigo-950/20 border border-emerald-100 dark:border-indigo-900/30 rounded-2xl p-5 space-y-4">
                 <h4 className="text-[10px] font-black text-emerald-700 dark:text-indigo-400 uppercase tracking-widest flex items-center gap-2">

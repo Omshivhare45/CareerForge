@@ -57,16 +57,17 @@ async function seedDB(force = false) {
       }
     }
 
-    // Clear existing user data in non-production environments if needed
-    if (!isProduction) {
-      console.log('🗑️  Clearing user data (Non-production environment)...');
+    // Clear existing user data in non-production environments only if explicitly requested
+    const shouldClearUsers = process.argv.includes('--clear-users') || process.env.CLEAR_USERS === 'true';
+    if (shouldClearUsers && !isProduction) {
+      console.log('🗑️  Clearing user data (requested)...');
       await Promise.all([
         User.deleteMany({}),
         Submission.deleteMany({}),
         UserProgress.deleteMany({})
       ]);
     } else {
-      console.log('⚠️  Production environment: Retaining all user data!');
+      console.log('⚠️  Retaining all user data!');
     }
 
     // Seed cloud credits (upsert by title)
