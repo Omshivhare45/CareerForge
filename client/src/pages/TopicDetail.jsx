@@ -242,8 +242,15 @@ const TopicDetail = () => {
       const firstCp = (topic.checkpoints && topic.checkpoints.length > 0) ? topic.checkpoints[0].id : 'cp1';
       const saved = localStorage.getItem(`dsa_checkpoint_${id}`) || firstCp;
       
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlCp = urlParams.get('cp');
+      
       const validCps = topic.checkpoints ? topic.checkpoints.map(cp => cp.id) : ['cp1', 'cp2', 'cp3'];
-      if (validCps.includes(saved)) {
+      
+      if (urlCp && validCps.includes(urlCp)) {
+        setActiveCheckpoint(urlCp);
+        localStorage.setItem(`dsa_checkpoint_${id}`, urlCp);
+      } else if (validCps.includes(saved)) {
         setActiveCheckpoint(saved);
       } else {
         setActiveCheckpoint(firstCp);

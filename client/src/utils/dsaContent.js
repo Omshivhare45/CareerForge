@@ -7,6 +7,7 @@ import { getTreesCheckpointContent } from './treesContent';
 import { getGraphCheckpointContent } from './graphContent';
 import { getDPCheckpointContent } from './dpContent';
 import { getGreedyCheckpointContent } from './greedyContent';
+import { getDsaSheetCheckpointContent } from './dsaSheetContent';
 
 // DSA Content Engine - Striver A2Z Aligned with 4 Unlockable Difficulty Levels per Topic
 // Boilerplates are strictly minimal starters (only imports + class/function signatures) - NO solutions/loops prefilled.
@@ -1427,6 +1428,9 @@ export const getDsaLanguageContent = (topicTitle, languageKey = 'cpp', difficult
 // Each video is used EXACTLY ONCE. No repetition.
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const getCheckpointContent = (checkpointId, lang = 'cpp') => {
+  if (checkpointId && checkpointId.startsWith('sheet_cp')) {
+    return getDsaSheetCheckpointContent(checkpointId, lang);
+  }
   if (checkpointId && checkpointId.startsWith('arr_cp')) {
     return getArraysCheckpointContent(checkpointId, lang);
   }

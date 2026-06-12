@@ -2466,7 +2466,38 @@ const topicData = {
   'dsa:10': [
     { title: 'Heaps & Heapify', description: 'Max/Min Heap representations, insertion/deletion, Heapify, and HeapSort.', instructor: 'Love Babbar', difficulty: 'intermediate', estimatedTime: '4 hours', order: 1, youtubeLink: 'https://www.youtube.com/watch?v=HqPJF2L5h9U', theoryLink: 'https://www.geeksforgeeks.org/heap-data-structure/', practiceLink: 'https://leetcode.com/tag/heap-priority-queue/' },
     { title: 'Heap Interview Questions', description: 'Kth smallest element, merge heaps, median in a stream.', instructor: 'Love Babbar', difficulty: 'advanced', estimatedTime: '5 hours', order: 2, youtubeLink: 'https://www.youtube.com/watch?v=HqPJF2L5h9U', theoryLink: 'https://www.geeksforgeeks.org/heap-data-structure/', practiceLink: 'https://leetcode.com/problems/find-median-from-data-stream/' },
-    { title: 'Tries & Implementation', description: 'Prefix trees, insertion, search, and prefix matching algorithms.', instructor: 'Love Babbar', difficulty: 'intermediate', estimatedTime: '4 hours', order: 3, youtubeLink: 'https://www.youtube.com/watch?v=dBGUmUQhjaM', theoryLink: 'https://www.geeksforgeeks.org/trie-insert-and-search/', practiceLink: 'https://leetcode.com/problems/implement-trie-prefix-tree/' }
+    { title: 'Tries & Implementation', description: 'Prefix trees, insertion, search, and prefix matching algorithms.', instructor: 'Love Babbar', difficulty: 'intermediate', estimatedTime: '4 hours', order: 3, youtubeLink: 'https://www.youtube.com/watch?v=dBGUmUQhjaM', theoryLink: 'https://www.geeksforgeeks.org/trie-insert-and-search/', practiceLink: 'https://leetcode.com/problems/implement-trie-prefix-tree/' },
+    {
+      title: 'DSA Cheat Sheet (Top Repeated)',
+      description: 'A collection of the most repeated DSA coding questions asked in technical interviews at top companies like Google, Amazon, Microsoft, and Meta.',
+      instructor: 'Striver & Love Babbar',
+      difficulty: 'intermediate',
+      estimatedTime: '8-10 hours',
+      order: 4,
+      isCheckpointModule: true,
+      checkpoints: [
+        { id: 'sheet_cp1', label: '1. Two Sum', description: 'Google, Amazon, Meta, Microsoft', youtubeLink: 'https://www.youtube.com/watch?v=DRU_nIY4j4c' },
+        { id: 'sheet_cp2', label: '2. Buy & Sell Stock', description: 'Amazon, Microsoft, Google, Apple', youtubeLink: 'https://www.youtube.com/watch?v=excAOcl19kk' },
+        { id: 'sheet_cp3', label: '3. Contains Duplicate', description: 'Amazon, Adobe, Microsoft', youtubeLink: 'https://www.youtube.com/watch?v=3OamzN90kQg' },
+        { id: 'sheet_cp4', label: '4. Product Except Self', description: 'Amazon, Microsoft, Facebook', youtubeLink: 'https://www.youtube.com/watch?v=gReAturMcRs' },
+        { id: 'sheet_cp5', label: '5. Maximum Subarray', description: 'Amazon, Microsoft, Google', youtubeLink: 'https://www.youtube.com/watch?v=H5PvPRwUPng' },
+        { id: 'sheet_cp6', label: '6. Reverse Linked List', description: 'Amazon, Microsoft, Adobe', youtubeLink: 'https://www.youtube.com/watch?v=iRtLEoL-r-Y' },
+        { id: 'sheet_cp7', label: '7. Detect List Cycle', description: 'Amazon, Microsoft', youtubeLink: 'https://www.youtube.com/watch?v=aFitA8X1518' },
+        { id: 'sheet_cp8', label: '8. Merge Sorted Lists', description: 'Amazon, Microsoft', youtubeLink: 'https://www.youtube.com/watch?v=Xb4sraKQV2o' },
+        { id: 'sheet_cp9', label: '9. Valid Parentheses', description: 'Amazon, Facebook, Microsoft', youtubeLink: 'https://www.youtube.com/watch?v=WKpHszpdfnM' },
+        { id: 'sheet_cp10', label: '10. Next Greater Element', description: 'Amazon, Microsoft', youtubeLink: 'https://www.youtube.com/watch?v=V09NfaGf2Ao' },
+        { id: 'sheet_cp11', label: '11. Invert Binary Tree', description: 'Google, Amazon', youtubeLink: 'https://www.youtube.com/watch?v=fKgZaGX-c4Y' },
+        { id: 'sheet_cp12', label: '12. Max Depth Tree', description: 'Amazon, Goldman Sachs', youtubeLink: 'https://www.youtube.com/watch?v=eD3tmO66aSE' },
+        { id: 'sheet_cp13', label: '13. Lowest Common Ancestor BST', description: 'Amazon, Microsoft, Facebook', youtubeLink: 'https://www.youtube.com/watch?v=cX_kPV_yS2Y' },
+        { id: 'sheet_cp14', label: '14. Tree Level Order', description: 'Amazon, Microsoft, Bloomberg', youtubeLink: 'https://www.youtube.com/watch?v=EoAsWbO7sqg' },
+        { id: 'sheet_cp15', label: '15. Number of Islands', description: 'Amazon, Google, Microsoft, Meta', youtubeLink: 'https://www.youtube.com/watch?v=muncqlKJ8ZY' },
+        { id: 'sheet_cp16', label: '16. Path in Graph', description: 'Facebook, Google', youtubeLink: 'https://www.youtube.com/watch?v=f2EfG57Rq3Y' },
+        { id: 'sheet_cp17', label: '17. Climbing Stairs', description: 'Amazon, Adobe, Google', youtubeLink: 'https://www.youtube.com/watch?v=A617IOwlq7E' },
+        { id: 'sheet_cp18', label: '18. Coin Change', description: 'Amazon, Microsoft, Goldman Sachs', youtubeLink: 'https://www.youtube.com/watch?v=HGYgy8WYyfU' },
+        { id: 'sheet_cp19', label: '19. Longest Common Subseq', description: 'Amazon, Microsoft, Honeywell', youtubeLink: 'https://www.youtube.com/watch?v=NPvvyJh-C_w' },
+        { id: 'sheet_cp20', label: '20. N Meetings in One Room', description: 'Amazon, Microsoft', youtubeLink: 'https://www.youtube.com/watch?v=zPtI8q9ALU8' }
+      ]
+    }
   ]
 
 ,
