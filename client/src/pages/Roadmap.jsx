@@ -32,6 +32,7 @@ const SHEET_QUESTIONS = [
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { analyzeDsaProfile, DSA_LEVELS, DSA_LANGUAGE_LABELS, getDsaBadgeForLevel, getStreakRank, normalizeDsaLanguage } from '../utils/dsaPersonalization';
+import { STRIVER_A2Z_SHEET } from '../utils/striverA2ZContent';
 
 // Beautiful gamified icons for DSA and Generic roadmaps
 const getLevelIcon = (index, domainSlug) => {
@@ -68,6 +69,12 @@ const Roadmap = () => {
   const [sheetCompany, setSheetCompany] = useState('All');
   const [sheetTopic, setSheetTopic] = useState('All');
   const [sheetCompletions, setSheetCompletions] = useState([]);
+
+  // Striver A2Z Sheet state
+  const [a2zSearch, setA2zSearch] = useState('');
+  const [a2zDifficulty, setA2zDifficulty] = useState('All');
+  const [a2zCompletions, setA2zCompletions] = useState([]);
+  const [expandedA2zStep, setExpandedA2zStep] = useState(null);
 
   const getProgressKey = (slug) => {
     if (!slug) return 'dsa';
@@ -154,6 +161,28 @@ const Roadmap = () => {
     if (!dsaSheetTopicId) return;
     localStorage.setItem(`dsa_checkpoint_${dsaSheetTopicId}`, cpId);
     navigate(`/topic/${dsaSheetTopicId}?cp=${cpId}`);
+  };
+
+  useEffect(() => {
+    try {
+      const completed = JSON.parse(localStorage.getItem('a2z_cp_done') || '[]');
+      setA2zCompletions(completed);
+    } catch (e) {
+      setA2zCompletions([]);
+    }
+  }, []);
+
+  const handleToggleA2zProblem = (problemId) => {
+    const isDone = a2zCompletions.includes(problemId);
+    let updated;
+    if (isDone) {
+      updated = a2zCompletions.filter(id => id !== problemId);
+    } else {
+      updated = [...a2zCompletions, problemId];
+    }
+    setA2zCompletions(updated);
+    localStorage.setItem('a2z_cp_done', JSON.stringify(updated));
+    toast.success(isDone ? 'Marked problem as unsolved' : 'Marked problem as solved! 🚀');
   };
 
   const fetchRoadmap = async (id) => {
@@ -262,6 +291,45 @@ const Roadmap = () => {
 
     return matchesSearch && matchesCompany && matchesTopic;
   });
+
+  // Striver A2Z Statistics
+  const allA2zProblems = [];
+  STRIVER_A2Z_SHEET.forEach(step => {
+    step.subcategories.forEach(sub => {
+      sub.problems.forEach(p => {
+        allA2zProblems.push(p);
+      });
+    });
+  });
+
+  const totalA2zCount = allA2zProblems.length;
+  const solvedA2zCount = allA2zProblems.filter(p => a2zCompletions.includes(p.id)).length;
+  const percentA2zCompleted = totalA2zCount > 0 ? Math.round((solvedA2zCount / totalA2zCount) * 100) : 0;
+
+  const easyA2zTotal = allA2zProblems.filter(p => p.difficulty === 'Easy').length;
+  const easyA2zSolved = allA2zProblems.filter(p => p.difficulty === 'Easy' && a2zCompletions.includes(p.id)).length;
+
+  const mediumA2zTotal = allA2zProblems.filter(p => p.difficulty === 'Medium').length;
+  const mediumA2zSolved = allA2zProblems.filter(p => p.difficulty === 'Medium' && a2zCompletions.includes(p.id)).length;
+
+  const hardA2zTotal = allA2zProblems.filter(p => p.difficulty === 'Hard').length;
+  const hardA2zSolved = allA2zProblems.filter(p => p.difficulty === 'Hard' && a2zCompletions.includes(p.id)).length;
+
+  const getFilteredStepProblems = (stepObj) => {
+    const matched = [];
+    stepObj.subcategories.forEach(sub => {
+      sub.problems.forEach(p => {
+        const searchLower = a2zSearch.toLowerCase();
+        const matchesSearch = p.name.toLowerCase().includes(searchLower) || sub.title.toLowerCase().includes(searchLower);
+        const matchesDifficulty = a2zDifficulty === 'All' || p.difficulty === a2zDifficulty;
+
+        if (matchesSearch && matchesDifficulty) {
+          matched.push(p);
+        }
+      });
+    });
+    return matched;
+  };
 
   return (
     <div className="pb-20 max-w-6xl mx-auto px-6 pt-10 transition-colors duration-300">
@@ -419,7 +487,7 @@ const Roadmap = () => {
       {/* Segmented View Switcher */}
       {isDSA && (
         <div className="flex justify-center mb-10">
-          <div className="bg-[var(--bg-sub)] p-1.5 rounded-2xl border border-[var(--border)] flex gap-2 shadow-inner">
+          <div className="bg-[var(--bg-sub)] p-1.5 rounded-2xl border border-[var(--border)] flex flex-wrap justify-center gap-2 shadow-inner">
             <button
               onClick={() => setRoadmapView('path')}
               className={`flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${
@@ -439,6 +507,16 @@ const Roadmap = () => {
               }`}
             >
               🔥 Company DSA Sheet
+            </button>
+            <button
+              onClick={() => setRoadmapView('a2z')}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${
+                roadmapView === 'a2z'
+                  ? 'bg-gradient-to-r from-[var(--primary)] to-amber-500 text-white shadow-md'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)]/50'
+              }`}
+            >
+              📚 Striver A2Z Sheet
             </button>
           </div>
         </div>
@@ -580,7 +658,7 @@ const Roadmap = () => {
             </motion.div>
           )}
         </>
-      ) : (
+      ) : roadmapView === 'sheet' ? (
         <div className="animate-fade-in space-y-8">
           {/* Stat Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -805,6 +883,284 @@ const Roadmap = () => {
                 })}
               </div>
             )}
+          </div>
+        </div>
+      ) : (
+        <div className="animate-fade-in space-y-8">
+          {/* Stat Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="card p-6 bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-[var(--text-light)]">A2Z Progress</span>
+                <h3 className="text-3xl font-black text-[var(--text-main)] mt-1">{solvedA2zCount} / {totalA2zCount}</h3>
+              </div>
+              <div className="mt-4">
+                <div className="flex justify-between text-[10px] font-bold text-[var(--text-muted)] mb-1">
+                  <span>{percentA2zCompleted}% Completed</span>
+                  <span>{totalA2zCount - solvedA2zCount} Remaining</span>
+                </div>
+                <div className="h-2.5 bg-[var(--bg-sub)] rounded-full overflow-hidden border border-[var(--border)]">
+                  <div 
+                    className="h-full bg-gradient-to-r from-orange-500 to-amber-500 rounded-full transition-all duration-500"
+                    style={{ width: `${percentA2zCompleted}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="card p-6 bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-[var(--text-light)]">By Difficulty</span>
+                <div className="space-y-1 mt-2 text-xs font-bold text-[var(--text-muted)]">
+                  <div className="flex justify-between gap-8">
+                    <span className="text-emerald-500">🟢 Easy</span>
+                    <span className="text-[var(--text-main)]">{easyA2zSolved} / {easyA2zTotal}</span>
+                  </div>
+                  <div className="flex justify-between gap-8">
+                    <span className="text-amber-500">🟡 Medium</span>
+                    <span className="text-[var(--text-main)]">{mediumA2zSolved} / {mediumA2zTotal}</span>
+                  </div>
+                  <div className="flex justify-between gap-8">
+                    <span className="text-rose-500">🔴 Hard</span>
+                    <span className="text-[var(--text-main)]">{hardA2zSolved} / {hardA2zTotal}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-4xl bg-orange-500/10 text-orange-500 w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner shrink-0">
+                📚
+              </div>
+            </div>
+
+            <div className="card p-6 bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-[var(--text-light)]">Preparation Level</span>
+                <h3 className="text-xl font-black text-orange-500 mt-2">
+                  {percentA2zCompleted === 100 ? '👑 A2Z Legend' : percentA2zCompleted >= 75 ? '🥷 Master' : percentA2zCompleted >= 50 ? '⚔️ Challenger' : percentA2zCompleted >= 25 ? '🛡️ Explorer' : '🌱 Initiate'}
+                </h3>
+                <p className="text-[10px] font-bold text-[var(--text-muted)] mt-1">Complete steps to unlock coding mastery</p>
+              </div>
+              <div className="text-4xl bg-[var(--primary-light)] text-[var(--primary)] w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner shrink-0">
+                ⚡
+              </div>
+            </div>
+          </div>
+
+          {/* Search and Filters */}
+          <div className="bg-[var(--bg-card)] border border-[var(--border)] p-6 rounded-2xl space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex-1 relative">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[var(--text-muted)]">
+                  <FiSearch />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Search Striver A2Z problems or subtopics..."
+                  value={a2zSearch}
+                  onChange={(e) => setA2zSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-[var(--bg-sub)] border border-[var(--border)] rounded-xl text-xs font-semibold text-[var(--text-main)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--primary)] transition duration-200"
+                />
+              </div>
+
+              {(a2zSearch !== '' || a2zDifficulty !== 'All') && (
+                <button
+                  onClick={() => {
+                    setA2zSearch('');
+                    setA2zDifficulty('All');
+                  }}
+                  className="px-4 py-2.5 bg-[var(--bg-sub)] hover:bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-main)] rounded-xl text-[10px] font-black uppercase tracking-wider transition duration-200 shrink-0"
+                >
+                  Reset Filters
+                </button>
+              )}
+            </div>
+
+            {/* Difficulty Filter */}
+            <div className="space-y-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-light)]">Filter by Difficulty</span>
+              <div className="flex flex-wrap gap-2">
+                {['All', 'Easy', 'Medium', 'Hard'].map((diff) => (
+                  <button
+                    key={diff}
+                    onClick={() => setA2zDifficulty(diff)}
+                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 border ${
+                      a2zDifficulty === diff
+                        ? 'bg-orange-500 border-orange-500 text-white shadow-md'
+                        : 'bg-[var(--bg-sub)] border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-card)]'
+                    }`}
+                  >
+                    {diff === 'All' ? '🌐 All Difficulties' : diff}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Collapsible Steps list */}
+          <div className="space-y-4">
+            {STRIVER_A2Z_SHEET.map((step) => {
+              const matchedProblems = getFilteredStepProblems(step);
+              if (matchedProblems.length === 0 && (a2zSearch !== '' || a2zDifficulty !== 'All')) {
+                return null;
+              }
+
+              const isExpanded = expandedA2zStep === step.step;
+              
+              const stepProblemsList = [];
+              step.subcategories.forEach(sub => {
+                sub.problems.forEach(p => stepProblemsList.push(p));
+              });
+              const stepTotal = stepProblemsList.length;
+              const stepSolved = stepProblemsList.filter(p => a2zCompletions.includes(p.id)).length;
+              const stepPercent = stepTotal > 0 ? Math.round((stepSolved / stepTotal) * 100) : 0;
+
+              return (
+                <div 
+                  key={step.step}
+                  className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-sm animate-fade-in"
+                >
+                  <button
+                    onClick={() => setExpandedA2zStep(isExpanded ? null : step.step)}
+                    className="w-full p-5 flex items-center justify-between text-left hover:bg-[var(--bg-sub)]/10 transition-colors"
+                  >
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-500 flex items-center justify-center font-black text-sm shrink-0">
+                        {step.step}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-black text-sm text-[var(--text-main)] leading-snug truncate">
+                          {step.title}
+                        </h3>
+                        <div className="flex items-center gap-3 mt-1 flex-wrap">
+                          <span className="text-[10px] font-bold text-[var(--text-muted)]">
+                            {stepSolved} / {stepTotal} Completed
+                          </span>
+                          <span className="w-1.5 h-1.5 bg-[var(--border)] rounded-full" />
+                          <span className="text-[10px] font-bold text-orange-500">
+                            {stepPercent}% Finished
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 pl-4">
+                      <div className="w-20 hidden sm:block h-1.5 bg-[var(--bg-sub)] rounded-full overflow-hidden border border-[var(--border)]">
+                        <div 
+                          className="h-full bg-orange-500 rounded-full transition-all duration-300"
+                          style={{ width: `${stepPercent}%` }}
+                        />
+                      </div>
+                      <span className="text-lg text-[var(--text-muted)]">
+                        {isExpanded ? '▲' : '▼'}
+                      </span>
+                    </div>
+                  </button>
+
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <div className="p-5 border-t border-[var(--border)] bg-[var(--bg-sub)]/20 space-y-6">
+                          {step.subcategories.map((sub, subIdx) => {
+                            const subProblems = sub.problems.filter(p => {
+                              const searchLower = a2zSearch.toLowerCase();
+                              const matchesSearch = p.name.toLowerCase().includes(searchLower);
+                              const matchesDiff = a2zDifficulty === 'All' || p.difficulty === a2zDifficulty;
+                              return matchesSearch && matchesDiff;
+                            });
+
+                            if (subProblems.length === 0) return null;
+
+                            return (
+                              <div key={subIdx} className="space-y-3">
+                                <h4 className="text-[10px] font-black text-[var(--text-main)] uppercase tracking-wider border-l-2 border-orange-500 pl-2.5">
+                                  {sub.title}
+                                </h4>
+                                
+                                <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl overflow-hidden divide-y divide-[var(--border)]">
+                                  {subProblems.map((p) => {
+                                    const isDone = a2zCompletions.includes(p.id);
+                                    return (
+                                      <div 
+                                        key={p.id} 
+                                        className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-150 ${
+                                          isDone 
+                                            ? 'bg-emerald-500/5 hover:bg-emerald-500/10' 
+                                            : 'hover:bg-[var(--bg-sub)]/30'
+                                        }`}
+                                      >
+                                        <div className="flex items-center gap-3">
+                                          <button
+                                            onClick={() => handleToggleA2zProblem(p.id)}
+                                            className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all shrink-0 ${
+                                              isDone 
+                                                ? 'bg-emerald-500 border-emerald-500 text-white' 
+                                                : 'border-[var(--border)] hover:border-[var(--primary)] bg-[var(--bg-sub)]'
+                                            }`}
+                                          >
+                                            {isDone && <span className="text-xs font-black">✓</span>}
+                                          </button>
+                                          <div>
+                                            <span className={`text-xs font-black transition-all ${
+                                              isDone 
+                                                ? 'text-[var(--text-muted)] line-through' 
+                                                : 'text-[var(--text-main)]'
+                                            }`}>
+                                              {p.name}
+                                            </span>
+                                          </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2.5 self-end sm:self-auto shrink-0">
+                                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                                            p.difficulty === 'Easy' 
+                                              ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
+                                              : p.difficulty === 'Medium'
+                                              ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                                              : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
+                                          }`}>
+                                            {p.difficulty}
+                                          </span>
+
+                                          {p.leetcode && (
+                                            <a
+                                              href={p.leetcode}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="px-3.5 py-1.5 rounded-xl bg-orange-500/10 text-orange-500 border border-orange-500/20 hover:bg-orange-500 hover:text-white text-[9px] font-black uppercase tracking-wider transition-all duration-150"
+                                            >
+                                              LeetCode 🍊
+                                            </a>
+                                          )}
+
+                                          {p.gfg && (
+                                            <a
+                                              href={p.gfg}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="px-3.5 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white text-[9px] font-black uppercase tracking-wider transition-all duration-150"
+                                            >
+                                              GFG 🟢
+                                            </a>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
