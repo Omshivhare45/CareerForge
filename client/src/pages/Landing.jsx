@@ -249,10 +249,10 @@ const Landing = () => {
             </div>
           </div>
           <div className="flex flex-wrap justify-center gap-8 text-gray-300 font-bold">
-            <a href="#" className="hover:text-white hover:underline transition-all">About Us</a>
-            <a href="#" className="hover:text-white hover:underline transition-all">Careers</a>
-            <a href="#" className="hover:text-white hover:underline transition-all">Privacy Policy</a>
-            <a href="#" className="hover:text-white hover:underline transition-all">Contact</a>
+            <Link to="/about" className="hover:text-white hover:underline transition-all">About Us</Link>
+            <Link to="/careers" className="hover:text-white hover:underline transition-all">Careers</Link>
+            <Link to="/privacy-policy" className="hover:text-white hover:underline transition-all">Privacy Policy</Link>
+            <a href="mailto:support@careerforge.dev" className="hover:text-white hover:underline transition-all">Contact</a>
           </div>
         </div>
       </footer>

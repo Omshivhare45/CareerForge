@@ -23,6 +23,9 @@ import CareerGuide from './pages/CareerGuide';
 import ZeroToCoding from './pages/ZeroToCoding';
 import Profile from './pages/Profile';
 import Feedback from './pages/Feedback';
+import About from './pages/About';
+import Careers from './pages/Careers';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -45,6 +48,9 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/careers" element={<Careers />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
           {/* Protected Student Routes */}
           <Route element={<ProtectedRoute allowedRoles={['student', 'admin']} />}>

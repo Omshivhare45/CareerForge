@@ -201,7 +201,7 @@ const Signup = () => {
         </div>
         
         <p className="text-center mt-8 text-xs text-gray-400 max-w-xs mx-auto font-bold uppercase tracking-wider">
-          By signing up, you agree to our Terms of Service and Privacy Policy.
+          By signing up, you agree to our Terms of Service and <Link to="/privacy-policy" className="underline hover:text-[var(--brand-green)]">Privacy Policy</Link>.
         </p>
       </div>
     </div>
