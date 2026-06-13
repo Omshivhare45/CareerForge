@@ -252,7 +252,7 @@ const Landing = () => {
             <Link to="/about" className="hover:text-white hover:underline transition-all">About Us</Link>
             <Link to="/careers" className="hover:text-white hover:underline transition-all">Careers</Link>
             <Link to="/privacy-policy" className="hover:text-white hover:underline transition-all">Privacy Policy</Link>
-            <a href="mailto:support@careerforge.dev" className="hover:text-white hover:underline transition-all">Contact</a>
+            <Link to="/contact" className="hover:text-white hover:underline transition-all">Contact</Link>
           </div>
         </div>
       </footer>

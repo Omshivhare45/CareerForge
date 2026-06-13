@@ -26,6 +26,7 @@ import Feedback from './pages/Feedback';
 import About from './pages/About';
 import Careers from './pages/Careers';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import Contact from './pages/Contact';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -51,6 +52,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/careers" element={<Careers />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/contact" element={<Contact />} />
 
           {/* Protected Student Routes */}
           <Route element={<ProtectedRoute allowedRoles={['student', 'admin']} />}>

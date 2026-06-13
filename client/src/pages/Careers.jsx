@@ -171,6 +171,7 @@ const Careers = () => {
             <Link to="/about" className="hover:text-white transition-colors">About Us</Link>
             <Link to="/careers" className="hover:text-white transition-colors">Careers</Link>
             <Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>
           </div>
         </div>
       </footer>
