@@ -393,9 +393,12 @@ const AdminDashboard = () => {
     });
 
   const filteredUsers = users.filter(user => {
+    if (!user) return false;
+    const name = user.fullName || '';
+    const email = user.email || '';
     const matchesSearch = 
-      user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      user.email.toLowerCase().includes(searchQuery.toLowerCase());
+      name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     return matchesSearch && matchesRole;
   });
@@ -557,11 +560,11 @@ const AdminDashboard = () => {
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-indigo-600/20 border border-emerald-100 dark:border-indigo-500/20 text-emerald-700 dark:text-indigo-400 font-black text-sm flex items-center justify-center">
-                            {user.fullName.charAt(0)}
+                            {(user.fullName || '').charAt(0) || '?'}
                           </div>
                           <div>
-                            <span className="font-bold text-slate-800 dark:text-white text-xs block">{user.fullName}</span>
-                            <span className="text-[10px] text-slate-500 font-medium block mt-0.5">{user.email}</span>
+                            <span className="font-bold text-slate-800 dark:text-white text-xs block">{user.fullName || 'No Name'}</span>
+                            <span className="text-[10px] text-slate-500 font-medium block mt-0.5">{user.email || 'No Email'}</span>
                           </div>
                         </div>
                       </td>
@@ -1050,11 +1053,11 @@ const AdminDashboard = () => {
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-indigo-600/20 border border-emerald-100 dark:border-indigo-500/20 text-emerald-700 dark:text-indigo-400 font-black text-lg flex items-center justify-center">
-                    {selectedUser.fullName.charAt(0)}
+                    {(selectedUser.fullName || '').charAt(0) || '?'}
                   </div>
                   <div>
-                    <h3 className="text-base font-black text-slate-800 dark:text-white">{selectedUser.fullName}</h3>
-                    <span className="text-[10px] text-slate-500 font-medium block mt-0.5">{selectedUser.email}</span>
+                    <h3 className="text-base font-black text-slate-800 dark:text-white">{selectedUser.fullName || 'No Name'}</h3>
+                    <span className="text-[10px] text-slate-500 font-medium block mt-0.5">{selectedUser.email || 'No Email'}</span>
                   </div>
                 </div>
                 <button
