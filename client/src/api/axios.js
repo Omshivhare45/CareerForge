@@ -1,7 +1,9 @@
 import axios from 'axios';
 
-const rawApiUrl = import.meta.env.VITE_API_URL || 'https://careerforge-nkf0.onrender.com/api';
+const rawApiUrl = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : 'https://careerforge-nkf0.onrender.com/api');
 const baseURL = rawApiUrl.endsWith('/api') ? rawApiUrl : `${rawApiUrl.replace(/\/$/, '')}/api`;
+
+console.log('🔌 Axios API baseURL:', baseURL);
 
 const api = axios.create({
   baseURL,

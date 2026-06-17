@@ -29,6 +29,7 @@ const Jobs = () => {
       });
       setJobs(response.data.data);
     } catch (err) {
+      console.error('❌ Error fetching jobs:', err);
       toast.error('Failed to aggregate jobs from LinkedIn & Naukri');
     } finally {
       setLoading(false);
