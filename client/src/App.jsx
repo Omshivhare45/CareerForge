@@ -25,6 +25,7 @@ import Profile from './pages/Profile';
 import Feedback from './pages/Feedback';
 import About from './pages/About';
 import Careers from './pages/Careers';
+import Jobs from './pages/Jobs';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Contact from './pages/Contact';
 
@@ -66,6 +67,7 @@ function App() {
               <Route path="/code-guru" element={<AiChat />} />
               <Route path="/resources" element={<Resources />} />
               <Route path="/career-guide" element={<CareerGuide />} />
+              <Route path="/jobs" element={<Jobs />} />
               <Route path="/zero-to-coding" element={<ZeroToCoding />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/feedback" element={<Feedback />} />
