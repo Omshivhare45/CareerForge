@@ -322,7 +322,11 @@ const TopicDetail = () => {
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!isDragging) return;
-      const percentage = (e.clientX / window.innerWidth) * 100;
+      const container = document.getElementById('workspace-split-container');
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const relativeX = e.clientX - rect.left;
+      const percentage = (relativeX / rect.width) * 100;
       if (percentage > 20 && percentage < 80) {
         setLeftWidth(percentage);
       }
@@ -1514,6 +1518,17 @@ const TopicDetail = () => {
 
     return (
       <div className="flex h-[calc(100vh-64px)] w-full overflow-hidden bg-[var(--bg-main)] relative">
+        {isDragging && (
+          <style>{`
+            iframe {
+              pointer-events: none !important;
+            }
+            body {
+              user-select: none !important;
+              -webkit-user-select: none !important;
+            }
+          `}</style>
+        )}
 
         {/* Backdrop overlay for Checkpoint sidebar on mobile */}
         {isMobile && isCpSidebarOpen && (
@@ -1724,7 +1739,7 @@ const TopicDetail = () => {
             </div>
           )}
 
-          <div className="flex-1 flex flex-col lg:flex-row h-full overflow-hidden">
+          <div id="workspace-split-container" className="flex-1 flex flex-col lg:flex-row h-full overflow-hidden">
 
             {/* LEFT: Video + Problem */}
             <div 
@@ -2233,6 +2248,17 @@ const TopicDetail = () => {
 
   return (
     <div className="flex flex-col lg:flex-row h-[calc(100vh-64px)] w-full overflow-hidden bg-[var(--bg-main)] transition-colors duration-300 relative select-none">
+      {isDragging && (
+        <style>{`
+          iframe {
+            pointer-events: none !important;
+          }
+          body {
+            user-select: none !important;
+            -webkit-user-select: none !important;
+          }
+        `}</style>
+      )}
       
       {/* Background Confetti Elements */}
 
@@ -2323,7 +2349,7 @@ const TopicDetail = () => {
       </div>
 
       {/* DUAL-PANE Split Workspace Content */}
-      <div className="flex-1 flex flex-col lg:flex-row h-full overflow-hidden">
+      <div id="workspace-split-container" className="flex-1 flex flex-col lg:flex-row h-full overflow-hidden">
         
         {/* Mobile View Tab Switcher for non-checkpoint modules */}
         {isMobile && shouldSplitWorkspace && (
@@ -3005,7 +3031,7 @@ const TopicDetail = () => {
         {shouldSplitWorkspace && (
         <div 
           style={{ width: isFullscreen ? '100%' : (isMobile ? '100%' : `${100 - leftWidth}%`) }} 
-          className={`flex-1 h-full flex-col overflow-hidden bg-[#09090b] transition-all duration-150 shrink-0 ${
+          className={`flex-1 h-full flex-col overflow-hidden bg-[#09090b] shrink-0 ${
             isFullscreen ? 'fixed inset-0 z-50 w-screen h-screen' : 'relative'
           } ${isMobile && activeWorkspaceTab !== 'code' ? 'hidden' : 'flex'}`}
         >
