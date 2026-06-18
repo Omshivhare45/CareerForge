@@ -104,6 +104,15 @@ async function seedDB(force = false) {
       );
       console.log(`📁 Domain: ${domain.name}`);
 
+      if (domain.slug === 'web-development') {
+        console.log('🗑️  Clearing old Web Development phases, topics, and badges for a clean seed...');
+        await Promise.all([
+          Phase.deleteMany({ domainId: domain._id }),
+          Topic.deleteMany({ domainId: domain._id }),
+          Badge.deleteMany({ domainId: domain._id })
+        ]);
+      }
+
       const phases = phaseData[domain.slug] || [];
       let phaseCount = 0;
 

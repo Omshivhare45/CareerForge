@@ -1,12 +1,11 @@
 // Phase data keyed by domain slug
 const phaseData = {
   'web-development': [
-    { phaseNumber: 0, name: 'HTML', description: 'HTML5 structure, semantic tags, forms', estimatedDuration: '1 week' },
-    { phaseNumber: 1, name: 'CSS', description: 'Styling, Flexbox, Grid, responsive design', estimatedDuration: '2 weeks' },
-    { phaseNumber: 2, name: 'JavaScript', description: 'ES6+, DOM, async/await, fetch API', estimatedDuration: '3 weeks' },
-    { phaseNumber: 3, name: 'Git & GitHub', description: 'Version control, branches, PRs', estimatedDuration: '1 week' },
-    { phaseNumber: 4, name: 'React.js', description: 'Components, hooks, state management', estimatedDuration: '3 weeks' },
-    { phaseNumber: 5, name: 'Backend', description: 'Server-side development with Node.js, Express, databases, and authentication', estimatedDuration: '4 weeks' }
+    { phaseNumber: 0, name: 'Web Foundations & Responsive Layouts', description: 'Master the fundamentals of web pages (HTML, CSS, basic JS) and construct highly responsive layouts.', estimatedDuration: '1 week' },
+    { phaseNumber: 1, name: 'JavaScript Mastery', description: 'Deep dive into JS fundamentals, scoping, asynchronous behavior, and preparation for placement interviews.', estimatedDuration: '3 weeks' },
+    { phaseNumber: 2, name: 'Modern Frontend (React, Redux & TS)', description: 'Master component-driven development using React.js, global state using Redux Toolkit, and type safety with TypeScript.', estimatedDuration: '3 weeks' },
+    { phaseNumber: 3, name: 'Backend Engineering & APIs', description: 'Learn servers, databases, advanced transactions, and production-grade auth systems using Node, Express, and MongoDB.', estimatedDuration: '4 weeks' },
+    { phaseNumber: 4, name: 'Full Stack Integration & AI', description: 'Connect frontend and backend, secure your stack, and integrate Gemini AI APIs into a complete full stack project.', estimatedDuration: '2 weeks' }
   ],
   'data-science': [
     { phaseNumber: 1, name: 'Python Basics', description: 'Syntax, data types, control flow, functions', estimatedDuration: '2 weeks' },
