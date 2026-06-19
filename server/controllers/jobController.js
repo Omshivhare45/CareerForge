@@ -182,29 +182,36 @@ exports.getJobs = async (req, res) => {
 
     // Filter by Job/Internship type
     if (type && type !== 'all') {
-      filteredJobs = filteredJobs.filter(job => job.type.toLowerCase() === type.toLowerCase());
+      filteredJobs = filteredJobs.filter(job => job.type && job.type.toLowerCase() === type.toLowerCase());
     }
 
     // Filter by Tech Category (Devops, DSA, Fullstack, Frontend, Backend)
     if (category && category !== 'all') {
-      filteredJobs = filteredJobs.filter(job => job.category.toLowerCase() === category.toLowerCase());
+      filteredJobs = filteredJobs.filter(job => job.category && job.category.toLowerCase() === category.toLowerCase());
     }
 
     // Filter by Aggregation Source (LinkedIn, Naukri)
     if (source && source !== 'all') {
-      filteredJobs = filteredJobs.filter(job => job.source.toLowerCase() === source.toLowerCase());
+      filteredJobs = filteredJobs.filter(job => job.source && job.source.toLowerCase() === source.toLowerCase());
     }
 
     // Filter by search query (Title, Company, Location, Description, Skills)
     if (search && search.trim() !== '') {
       const query = search.trim().toLowerCase();
-      filteredJobs = filteredJobs.filter(job => 
-        job.title.toLowerCase().includes(query) ||
-        job.company.toLowerCase().includes(query) ||
-        job.location.toLowerCase().includes(query) ||
-        job.description.toLowerCase().includes(query) ||
-        job.skills.some(skill => skill.toLowerCase().includes(query))
-      );
+      filteredJobs = filteredJobs.filter(job => {
+        const title = job.title || '';
+        const company = job.company || '';
+        const location = job.location || '';
+        const description = job.description || '';
+        const skills = job.skills || [];
+        return (
+          title.toLowerCase().includes(query) ||
+          company.toLowerCase().includes(query) ||
+          location.toLowerCase().includes(query) ||
+          description.toLowerCase().includes(query) ||
+          skills.some(skill => skill && skill.toLowerCase().includes(query))
+        );
+      });
     }
 
     res.json({

@@ -30,7 +30,15 @@ const Jobs = () => {
       setJobs(response.data.data);
     } catch (err) {
       console.error('❌ Error fetching jobs:', err);
-      toast.error('Failed to aggregate jobs from LinkedIn & Naukri');
+      if (err.response?.status === 401) {
+        // Let Axios interceptor handle token clear/redirect
+        return;
+      }
+      if (err.code === 'ERR_NETWORK') {
+        toast.error('Local backend aggregator server is offline. Please run "npm run dev" in the server workspace.');
+      } else {
+        toast.error('Failed to aggregate jobs from LinkedIn & Naukri');
+      }
     } finally {
       setLoading(false);
     }
