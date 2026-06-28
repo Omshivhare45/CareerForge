@@ -546,6 +546,32 @@ const topicData = {
   ],
   'dsa:4': [
     {
+      title: 'OOPs Master',
+      description: 'Master Object-Oriented Programming (OOPs) concepts in C++ including Classes, Objects, Inheritance, Polymorphism, Encapsulation, and Abstraction.',
+      instructor: 'Love Babbar',
+      difficulty: 'intermediate',
+      estimatedTime: '4 hours',
+      order: 1,
+      isCheckpointModule: true,
+      checkpoints: [
+        {
+          id: 'oops_cp1',
+          label: 'L42. OOPs Concepts in C++ || Part-1',
+          description: 'Checkpoint 1: Classes, Objects, Constructors, Destructors, and memory allocation.',
+          youtubeLink: 'https://www.youtube.com/embed/BS9nCj391r8?rel=0&modestbranding=1'
+        },
+        {
+          id: 'oops_cp2',
+          label: 'L43. 4 Pillars of OOPs Concept - Inheritance, Polymorphism, Encapsulation & Abstraction',
+          description: 'Checkpoint 2: The 4 core pillars of OOPs: Encapsulation, Inheritance, Polymorphism, and Abstraction.',
+          youtubeLink: 'https://www.youtube.com/embed/V1P9wX8sZ0Q?rel=0&modestbranding=1'
+        }
+      ],
+      youtubeLink: 'https://www.youtube.com/watch?v=BS9nCj391r8&list=PLDzeHZWIZsTryvtXdMr6rPh4IDexB5NIA'
+    }
+  ],
+  'dsa:5': [
+    {
       title: 'Linked List Explorer',
       description: 'Understand singly linked lists, traverse nodes, find the middle node, and search elements. Watch tutorials, solve coding challenges, and track your progress in real-time!',
       instructor: 'Striver',
@@ -732,7 +758,7 @@ const topicData = {
       youtubeLink: 'https://www.youtube.com/watch?v=cg6JGiXhQ9c&list=PLgUwDviBIf0rAuz8tVcM0AymmhTRsfaLU'
     }
   ],
-  'dsa:5': [
+  'dsa:6': [
     {
       title: 'Stack & Queue Explorer',
       description: 'Master linear data structures, LIFO/FIFO patterns, bracket balancing, next greater element search, and queue summaries. Watch tutorials, solve coding challenges, and track your progress in real-time!',
@@ -860,7 +886,7 @@ const topicData = {
       youtubeLink: 'https://www.youtube.com/watch?v=tqQ5fTamIN4&list=PLgUwDviBIf0pOd5zvVVSzgpo6BaCpHT9c'
     }
   ],
-  'dsa:6': [
+  'dsa:7': [
     {
       title: 'Trees Explorer',
       description: 'Learn binary tree representations, node traversal sums, calculating max depth, and leaf node counts. Watch tutorials, solve coding challenges, and track your progress in real-time!',
@@ -1198,7 +1224,7 @@ const topicData = {
       youtubeLink: 'https://www.youtube.com/watch?v=OYqYEM1bMK8&list=PLgUwDviBIf0q8Hkd7bK2Bpryj2xVJk8Vk'
     }
   ],
-  'dsa:7': [
+  'dsa:8': [
     {
       title: 'Graph Explorer',
       description: 'Learn graph representations, path existence checks via BFS, and counting connected components via DFS. Watch tutorials, solve coding challenges, and track your progress in real-time!',
@@ -1548,7 +1574,7 @@ const topicData = {
       youtubeLink: 'https://www.youtube.com/watch?v=M3_pLsDdeuU&list=PLgUwDviBIf0oE3gA41TKO2H5bHpPd7fzn'
     }
   ],
-  'dsa:8': [
+  'dsa:9': [
     {
       title: 'Dynamic Programming Explorer',
       description: 'Master memoization and bottom-up tabulation to optimize recursive algorithms. Watch tutorials, solve coding challenges, and track your progress in real-time!',
@@ -1898,7 +1924,7 @@ const topicData = {
       youtubeLink: 'https://www.youtube.com/watch?v=tyB0ztf0DNY&list=PLgUwDviBIf0pwFf-BnpkXxs0Ra0eU2sJY'
     }
   ],
-  'dsa:9': [
+  'dsa:10': [
     {
       title: 'Greedy Explorer',
       description: 'Master greedy choice properties and local optimization strategies. Watch tutorials, solve coding challenges, and track your progress in real-time!',
@@ -1990,7 +2016,7 @@ const topicData = {
       youtubeLink: 'https://www.youtube.com/watch?v=DIX2p7vb9co&list=PLgUwDviBIf0rF1w2Koyh78zafB0cz7tea'
     }
   ],
-  'dsa:10': [
+  'dsa:11': [
     { title: 'Heaps & Heapify', description: 'Max/Min Heap representations, insertion/deletion, Heapify, and HeapSort.', instructor: 'Love Babbar', difficulty: 'intermediate', estimatedTime: '4 hours', order: 1, youtubeLink: 'https://www.youtube.com/watch?v=HqPJF2L5h9U', theoryLink: 'https://www.geeksforgeeks.org/heap-data-structure/', practiceLink: 'https://leetcode.com/tag/heap-priority-queue/' },
     { title: 'Heap Interview Questions', description: 'Kth smallest element, merge heaps, median in a stream.', instructor: 'Love Babbar', difficulty: 'advanced', estimatedTime: '5 hours', order: 2, youtubeLink: 'https://www.youtube.com/watch?v=HqPJF2L5h9U', theoryLink: 'https://www.geeksforgeeks.org/heap-data-structure/', practiceLink: 'https://leetcode.com/problems/find-median-from-data-stream/' },
     { title: 'Tries & Implementation', description: 'Prefix trees, insertion, search, and prefix matching algorithms.', instructor: 'Love Babbar', difficulty: 'intermediate', estimatedTime: '4 hours', order: 3, youtubeLink: 'https://www.youtube.com/watch?v=dBGUmUQhjaM', theoryLink: 'https://www.geeksforgeeks.org/trie-insert-and-search/', practiceLink: 'https://leetcode.com/problems/implement-trie-prefix-tree/' },

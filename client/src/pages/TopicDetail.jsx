@@ -150,10 +150,10 @@ const TopicDetail = () => {
     if (!id || learningStep === undefined) return;
     localStorage.setItem(`dsa_learning_step_${id}`, learningStep.toString());
   }, [id, learningStep]);
-  
   // Custom Dynamic Languages & Tracks State
   const [selectedLang, setSelectedLang] = useState(() => normalizeDsaLanguage(localStorage.getItem('dsa_lang') || 'cpp'));
   const [useStriverAdvanced, setUseStriverAdvanced] = useState(() => localStorage.getItem('striver_advanced') === 'true');
+  const [dsaCourse, setDsaCourse] = useState(() => localStorage.getItem('dsa_course') || 'default');
   
   const langDisplayMap = { cpp: 'C++', java: 'Java', python: 'Python', javascript: 'JavaScript' };
   const currentLangName = langDisplayMap[selectedLang] || 'C++';
@@ -380,6 +380,10 @@ const TopicDetail = () => {
     localStorage.setItem('striver_advanced', useStriverAdvanced.toString());
   }, [useStriverAdvanced]);
 
+  useEffect(() => {
+    localStorage.setItem('dsa_course', dsaCourse);
+  }, [dsaCourse]);
+
   // Load topic & dependencies
   useEffect(() => {
     fetchTopic();
@@ -483,13 +487,13 @@ const TopicDetail = () => {
 
   const langContent = useMemo(() => {
     if (isDsaDomain) {
-      return getDsaLanguageContent(topic?.title, selectedLang, activeDifficulty, useStriverAdvanced, topic?.youtubeLink);
+      return getDsaLanguageContent(topic?.title, selectedLang, activeDifficulty, useStriverAdvanced, topic?.youtubeLink, dsaCourse);
     }
     if (isWebDevDomain) {
       return getWebDevLanguageContent(topic?.title, selectedLang, activeDifficulty, topic?.youtubeLink);
     }
     return null;
-  }, [isDsaDomain, isWebDevDomain, topic, selectedLang, activeDifficulty, useStriverAdvanced]);
+  }, [isDsaDomain, isWebDevDomain, topic, selectedLang, activeDifficulty, useStriverAdvanced, dsaCourse]);
 
   const lessonAssessment = shouldSplitWorkspace ? getLessonAssessment(topic?.title, selectedLang) : [];
   const lessonAssessmentComplete = !shouldSplitWorkspace || lessonAssessment.every((_, index) => (lessonAnswers[index] || '').trim().length > 0);
@@ -498,13 +502,13 @@ const TopicDetail = () => {
   const activeCheckpointContent = useMemo(() => {
     if (!isCheckpointModule) return null;
     if (isDsaDomain) {
-      return getCheckpointContent(activeCheckpoint, selectedLang);
+      return getCheckpointContent(activeCheckpoint, selectedLang, dsaCourse);
     }
     if (isWebDevDomain) {
       return getWebDevCheckpointContent(activeCheckpoint, selectedLang);
     }
     return null;
-  }, [isCheckpointModule, isDsaDomain, isWebDevDomain, activeCheckpoint, selectedLang]);
+  }, [isCheckpointModule, isDsaDomain, isWebDevDomain, activeCheckpoint, selectedLang, dsaCourse]);
 
   // For checkpoint module: use the unique embed URL baked into each checkpoint
   // Each checkpoint has its own pre-built videoEmbedUrl — NEVER the same video twice
@@ -1595,6 +1599,37 @@ const TopicDetail = () => {
               })}
             </div>
           </div>
+
+          {/* C++ Playlist/Course Selector */}
+          {selectedLang === 'cpp' && (
+            <div className="px-4 py-2 border-b border-[var(--border)] shrink-0 bg-[var(--bg-sub)]/30">
+              <div className="text-[8px] font-black text-[var(--text-light)] uppercase tracking-wider mb-2 flex items-center gap-1">
+                <FiYoutube className="text-red-500" /> C++ DSA Playlist Course
+              </div>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setDsaCourse('default')}
+                  className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${
+                    dsaCourse === 'default'
+                      ? 'bg-[var(--primary)] text-[var(--text-main)] shadow-sm'
+                      : 'bg-[var(--bg-sub)] text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                  }`}
+                >
+                  Love Babbar
+                </button>
+                <button
+                  onClick={() => setDsaCourse('striver')}
+                  className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${
+                    dsaCourse === 'striver'
+                      ? 'bg-[var(--primary)] text-[var(--text-main)] shadow-sm'
+                      : 'bg-[var(--bg-sub)] text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                  }`}
+                >
+                  Striver A2Z
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Checkpoint navigation list */}
           <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2">
@@ -3066,6 +3101,32 @@ const TopicDetail = () => {
                   </button>
                 ))}
               </div>
+
+              {/* C++ Playlist/Course Selector */}
+              {selectedLang === 'cpp' && (
+                <div className="flex items-center gap-1 bg-[var(--bg-sub)] p-0.5 rounded-lg border border-[var(--border)]">
+                  <button
+                    onClick={() => setDsaCourse('default')}
+                    className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase transition-all ${
+                      dsaCourse === 'default'
+                        ? 'bg-[var(--primary)] text-[var(--text-main)] shadow-sm'
+                        : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                    }`}
+                  >
+                    Love Babbar
+                  </button>
+                  <button
+                    onClick={() => setDsaCourse('striver')}
+                    className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase transition-all ${
+                      dsaCourse === 'striver'
+                        ? 'bg-[var(--primary)] text-[var(--text-main)] shadow-sm'
+                        : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                    }`}
+                  >
+                    Striver
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
