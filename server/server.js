@@ -148,4 +148,4 @@ const startServer = async () => {
 
 startServer();
 
-// Triggering restart with newly freed disk space!
+// Triggering restart for port configuration changes!

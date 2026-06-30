@@ -12,7 +12,7 @@ const getBaseURL = () => {
     window.location.hostname.startsWith('192.168.')
   );
                   
-  return isLocal ? 'http://localhost:5000' : 'https://careerforge-nkf0.onrender.com';
+  return isLocal ? 'http://localhost:5001' : 'https://careerforge-nkf0.onrender.com';
 };
 
 const rawApiUrl = getBaseURL();
