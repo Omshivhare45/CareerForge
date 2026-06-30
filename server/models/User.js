@@ -150,6 +150,17 @@ userSchema.virtual('totalXP').get(function() {
 userSchema.set('toJSON', { virtuals: true });
 userSchema.set('toObject', { virtuals: true });
 
+// Sanitize fields before validation (handles shared DB/legacy record migrations gracefully)
+userSchema.pre('validate', function(next) {
+  if (!this.fullName) {
+    this.fullName = 'Google User';
+  }
+  if (!this.role || !['student', 'admin', 'mentor'].includes(this.role)) {
+    this.role = 'student';
+  }
+  next();
+});
+
 // Hash password before save
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password') || !this.password) return next();
