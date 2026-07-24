@@ -168,9 +168,9 @@ const updateDailySnapshot = async (stats) => {
     { $group: { _id: '$appVersion', count: { $sum: 1 } } }
   ]);
 
-  const versionDistribution = {};
+  const versionDistribution = [];
   versionData.forEach(v => {
-    if (v._id) versionDistribution[v._id] = v.count;
+    if (v._id) versionDistribution.push({ version: v._id, count: v.count });
   });
 
   await PlatformAnalytics.findOneAndUpdate(

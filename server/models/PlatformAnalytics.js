@@ -19,7 +19,10 @@ const platformAnalyticsSchema = new mongoose.Schema({
     web: { type: Number, default: 0 },
     desktop: { type: Number, default: 0 }
   },
-  versionDistribution: { type: Map, of: Number, default: {} },
+  versionDistribution: [{
+    version: { type: String },
+    count: { type: Number }
+  }],
   lastUpdated: { type: Date, default: Date.now }
 }, { timestamps: true });
 
