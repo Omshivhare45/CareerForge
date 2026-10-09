@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import GlobalAiChat from './GlobalAiChat';
@@ -15,6 +15,7 @@ const Layout = ({ isAdmin = false }) => {
 
   const isEditorRoute = EDITOR_ROUTES.some((route) => location.pathname.startsWith(route.replace(/\/$/, '')) || location.pathname.includes(route));
   const isDsaWorkspace = location.pathname.startsWith('/topic/') || location.pathname === '/roadmap';
+  const isDashboardHome = location.pathname === '/dashboard';
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -53,23 +54,25 @@ const Layout = ({ isAdmin = false }) => {
     <div className="flex flex-col bg-[var(--bg-main)] min-h-screen text-[var(--text-main)] transition-colors duration-300 relative overflow-hidden">
       {isDsaWorkspace && <FloatingOrbs variant={isEditorRoute ? 'editor' : 'default'} />}
 
-      <Navbar
-        isAdmin={isAdmin}
-        isScrolled={isScrolled}
-        isVisible={isNavVisible}
-        isCompact={isEditorRoute}
-      />
+      {!isDashboardHome && (
+        <Navbar
+          isAdmin={isAdmin}
+          isScrolled={isScrolled}
+          isVisible={isNavVisible}
+          isCompact={isEditorRoute}
+        />
+      )}
 
       <main
         onScroll={handleScroll}
-        className={`flex-1 overflow-y-auto bg-transparent relative z-10 ${navPadding} ${
+        className={`flex-1 overflow-y-auto bg-transparent relative z-10 ${isDashboardHome ? '' : navPadding} ${
           isEditorRoute ? 'overflow-hidden !pt-[64px]' : ''
         }`}
       >
         <Outlet />
       </main>
 
-      {!isEditorRoute && <GlobalAiChat />}
+      {!isEditorRoute && !isDashboardHome && <GlobalAiChat />}
     </div>
   );
 };

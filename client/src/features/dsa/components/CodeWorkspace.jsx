@@ -241,8 +241,13 @@ export const CodeWorkspace = ({ ctx, variant }) => {
   // ─── STANDARD VARIANT (LOVE BABBAR / STRIVER / NON-CODING EDITOR) ──────────
   return (
     <div
-      style={{ width: isFullscreen ? '100%' : (isMobile ? '100%' : `${100 - ctx.leftWidth}%`) }}
-      className={`flex-1 h-full flex-col overflow-hidden bg-[#09090b] shrink-0 ${
+      
+style={{
+  width: isFullscreen || isMobile ? '100%' : undefined,
+  minWidth: 0,
+}}
+
+      className={`flex-1 h-[calc(100svh-64px)] flex-col overflow-hidden bg-[#09090b] shrink-0 ${
         isFullscreen ? 'fixed inset-0 z-50 w-screen h-screen' : 'relative'
       } ${isMobile && activeWorkspaceTab !== 'code' ? 'hidden' : 'flex'}`}
     >
@@ -310,10 +315,12 @@ export const CodeWorkspace = ({ ctx, variant }) => {
           </div>
 
           {/* Monaco Editor Container */}
-          <div className="flex-1 min-h-[250px] w-full relative overflow-hidden bg-[#1e1e1e] editor-glow">
+          
+<div className="flex-1 min-w-0 w-full h-[400px] min-h-[400px] relative overflow-hidden bg-[#1e1e1e] editor-glow">
+
             <CodeEditor
               language={selectedLang === 'js' ? 'javascript' : selectedLang}
-              value={editorCode}
+              value={editorCode ||'// CareerForge editor test\nint main() {\n    return 0;\n}'}
               beforeMount={handleEditorWillMount}
               onChange={(val) => setEditorCode(val || '')}
               theme={editorTheme}

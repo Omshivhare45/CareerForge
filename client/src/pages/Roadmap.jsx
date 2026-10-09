@@ -33,6 +33,7 @@ import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { analyzeDsaProfile, DSA_LEVELS, DSA_LANGUAGE_LABELS, getDsaBadgeForLevel, getStreakRank, normalizeDsaLanguage } from '../utils/dsaPersonalization';
 import { STRIVER_A2Z_SHEET } from '../utils/striverA2ZContent';
+import { DSAWorkspacePage } from '../features/dsa/components/DSAWorkspacePage';
 
 // Beautiful gamified icons for DSA and Generic roadmaps
 const getLevelIcon = (index, domainSlug) => {
@@ -378,6 +379,12 @@ const Roadmap = () => {
       )}
 
       {roadmapView === 'path' ? (
+        isDSA ? (
+          /* DSA: the roadmap path IS the unified learning workspace */
+          <div className="h-[calc(100vh-185px)] min-h-[560px] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-card)]">
+            <DSAWorkspacePage ctx={null} />
+          </div>
+        ) : (
         <>
           {/* Connected Progression Level Path */}
           <div className="relative py-6 overflow-x-auto no-scrollbar scroll-smooth">
@@ -529,13 +536,13 @@ const Roadmap = () => {
                     isTopicCompleted={isTopicCompleted}
                     activeLevel={activeLevel}
                     isDSA={isDSA}
-                    dsaInstructor={dsaInstructor}
                   />
                 </div>
               </div>
             </motion.div>
           )}
         </>
+        )
       ) : roadmapView === 'sheet' ? (
         <div className="animate-fade-in space-y-8">
           {/* Stat Cards */}
@@ -1079,7 +1086,7 @@ const TopicsList = ({ phaseId, isTopicCompleted, activeLevel, isDSA }) => {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
       {filteredTopics.map((topic, i) => {
         const completed = isTopicCompleted(topic._id);
-        
+
         return (
           <Link 
             key={topic._id} 

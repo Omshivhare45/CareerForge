@@ -54,7 +54,13 @@ export const VideoPlayer = ({ ctx, variant }) => {
             </span>
             <button
               type="button"
-              onClick={() => { setCheckpointVideoFinished(true); toast.success('Video done! Now try it yourself 🚀'); }}
+              onClick={() => {
+                setCheckpointVideoFinished(true);
+                if (ctx?.id && ctx?.activeVideoKey) {
+                  localStorage.setItem(`dsa_video_done_${ctx.id}_${ctx.activeVideoKey}`, 'true');
+                }
+                toast.success('Video done! Now try it yourself 🚀');
+              }}
               className="text-[10px] bg-[var(--bg-sub)] border border-[var(--border)] text-[var(--text-main)] hover:bg-[var(--border)] font-bold px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap"
             >
               Mark Video Done
@@ -112,6 +118,49 @@ export const VideoPlayer = ({ ctx, variant }) => {
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
         ></iframe>
+      </div>
+    );
+  }
+
+  // ─── WORKSPACE TUTORIAL (catalog-driven multi-video DSA player) ───────────
+  // Mirrors the lovebabbar player but plays the ACTIVE catalog video (via
+  // activeVideoEmbedUrl), and ties into the tutorial-video-iframe so the YT API
+  // hooks in useDSATopic keep auto-resume + per-video completion working.
+  if (variant === 'workspace') {
+    if (!activeVideoEmbedUrl) return null;
+    return (
+      <div className="p-5 space-y-4 border-b border-[var(--border)]">
+        <div className="aspect-video bg-[var(--bg-sub)] rounded-xl overflow-hidden border border-[var(--border)] shadow-sm">
+          <iframe
+            id="tutorial-video-iframe"
+            className="w-full h-full"
+            src={appendYTParams(activeVideoEmbedUrl)}
+            title={topic?.title || "Video Tutorial"}
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+        {!isVideoFinished && (
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-[var(--text-muted)] font-medium">
+              Watch the tutorial, then complete the challenge.
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setIsVideoFinished(true);
+                if (ctx?.id && ctx?.activeVideoKey) {
+                  localStorage.setItem(`dsa_video_done_${ctx.id}_${ctx.activeVideoKey}`, 'true');
+                }
+                toast.success('Video done! Now try it yourself 🚀');
+              }}
+              className="text-[10px] bg-[var(--bg-sub)] border border-[var(--border)] text-[var(--text-main)] hover:bg-[var(--border)] font-bold px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap"
+            >
+              Mark Video Done
+            </button>
+          </div>
+        )}
       </div>
     );
   }

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../../api/axios';
 import { useAuth } from '../../../context/AuthContext';
 import { getDsaLanguageContent, getCheckpointContent } from '../../../utils/dsaContent';
+import { getDsaVideoList } from '../utils/dsaVideoCatalog';
 import { getWebDevLanguageContent, getWebDevCheckpointContent } from '../../../utils/webDevContent';
 import { getLessonAssessment, normalizeDsaLanguage } from '../../../utils/dsaPersonalization';
 import {
@@ -428,7 +429,7 @@ export const useDSATopic = () => {
     } finally {
       setLoading(false);
     }
-  }, [id, user, activeDomainProgress, fetchSubmissions, refreshUser, navigate]);
+  }, [id, user, activeDomainProgress.completedTopics, activeDomainProgress.startedTopics, fetchSubmissions, refreshUser, navigate]);
 
   // Dynamic boilerplate loaders
   const isDsaDomain = topic?.domainId?.slug === 'dsa' || topic?.domainId === 'dsa' ||
@@ -463,9 +464,12 @@ export const useDSATopic = () => {
   const lessonAssessment = shouldSplitWorkspace ? getLessonAssessment(topic?.title, selectedLang) : [];
   const lessonAssessmentComplete = !shouldSplitWorkspace || lessonAssessment.every((_, index) => (lessonAnswers[index] || '').trim().length > 0);
 
-  // Active checkpoint content (only relevant when isCheckpointModule)
+  // Active checkpoint content. In the DSA workspace, checkpoint videos are folded into
+  // any topic that carries checkpoints (e.g. DSA Cheat Sheet sheet-jumps), so compute
+  // content whenever checkpoints exist, not only for isCheckpointModule topics.
   const activeCheckpointContent = useMemo(() => {
-    if (!isCheckpointModule) return null;
+    const hasCheckpointVideos = isDsaDomain && Array.isArray(topic?.checkpoints) && topic.checkpoints.length > 0;
+    if (!isCheckpointModule && !hasCheckpointVideos) return null;
     if (isDsaDomain) {
       return getCheckpointContent(activeCheckpoint, selectedLang, dsaCourse);
     }
@@ -481,11 +485,68 @@ export const useDSATopic = () => {
   // For checkpoint module: use the unique embed URL baked into each checkpoint
   // Each checkpoint has its own pre-built videoEmbedUrl — NEVER the same video twice
   const checkpointVideoEmbedUrl = useMemo(() => {
-    if (!isCheckpointModule || !activeCheckpointContent?.videoEmbedUrl) return null;
+    if (!activeCheckpointContent?.videoEmbedUrl) return null;
     return activeCheckpointContent.videoEmbedUrl;
-  }, [isCheckpointModule, activeCheckpointContent]);
+  }, [activeCheckpointContent]);
+
+  // ─── DSA video catalog (many videos per topic) ─────────────────────────────
+  // The workspace lists every video via getDsaVideoList; the active selection
+  // drives the main player. Non-DSA domains keep the original single-video flow.
+  const topicVideos = useMemo(() => (isDsaDomain ? getDsaVideoList(topic) : null), [isDsaDomain, topic]);
+
+  const defaultVideoKey = useMemo(() => {
+    if (!topicVideos || topicVideos.length === 0) return null;
+    let fromUrl = null;
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const vParam = urlParams.get('v');
+      if (vParam && topicVideos.some((x) => x.key === vParam)) {
+        fromUrl = vParam;
+      } else {
+        const cpParam = urlParams.get('cp');
+        if (cpParam && topicVideos.some((x) => x.key === `cp:${cpParam}`)) fromUrl = `cp:${cpParam}`;
+      }
+    } catch (err) {
+      console.warn('Failed to read video URL param', err);
+    }
+    return fromUrl || topicVideos[0].key;
+  }, [topicVideos]);
+
+  const [activeVideoKey, setActiveVideoKey] = useState(defaultVideoKey);
+
+  useEffect(() => {
+    setActiveVideoKey(defaultVideoKey);
+  }, [defaultVideoKey]);
+
+  const activeVideo = useMemo(() => {
+    if (!topicVideos || topicVideos.length === 0) return null;
+    return topicVideos.find((v) => v.key === activeVideoKey) || topicVideos[0] || null;
+  }, [topicVideos, activeVideoKey]);
+
+  // Selecting a checkpoint video also selects that checkpoint so the existing
+  // checkpoint content (video embed, challenge, editor) is driven correctly.
+  useEffect(() => {
+    if (activeVideo?.type === 'checkpoint' && activeVideo.checkpointId) {
+      setActiveCheckpoint(activeVideo.checkpointId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeVideoKey, id]);
 
   const activeVideoEmbedUrl = useMemo(() => {
+    if (isDsaDomain) {
+      if (activeVideo?.type === 'tutorial') {
+        if (activeVideo.videoId) {
+          let url = `https://www.youtube.com/embed/${activeVideo.videoId}?rel=0&modestbranding=1&showinfo=0`;
+          if (activeVideo.playlistId) {
+            url += `&list=${activeVideo.playlistId}`;
+          }
+          return url;
+        }
+        return topic?.youtubeLink ? getYouTubeEmbedUrl(topic.youtubeLink) : null;
+      }
+      // Checkpoint videos use the checkpoint player, not the tutorial player.
+      return null;
+    }
     if (langContent?.youtubeVideoId) {
       if (langContent.youtubeVideoId.length === 11) {
         let url = `https://www.youtube.com/embed/${langContent.youtubeVideoId}?rel=0&modestbranding=1&showinfo=0`;
@@ -503,7 +564,7 @@ export const useDSATopic = () => {
       return getYouTubeEmbedUrl(topic.youtubeLink);
     }
     return null;
-  }, [langContent, topic]);
+  }, [isDsaDomain, activeVideo, langContent, topic]);
 
   // Hook up YouTube Player state listener for the Striver/guided tutorial player: we mirror the
   // original TopicDetail behavior and instantiate the YT API player whenever the Step-1 video is
@@ -531,6 +592,9 @@ export const useDSATopic = () => {
                 // 0 is YT.PlayerState.ENDED
                 if (event.data === 0) {
                   setIsVideoFinished(true);
+                  if (isDsaDomain && activeVideo?.key) {
+                    localStorage.setItem(`dsa_video_done_${id}_${activeVideo.key}`, 'true');
+                  }
                   toast.success("Tutorial video completed! Assessment is now unlocked! 🔓");
                 }
 
@@ -570,7 +634,7 @@ export const useDSATopic = () => {
         } catch (e) {}
       }
     };
-  }, [activeVideoEmbedUrl, learningStep, user, id, dsaCourse]);
+  }, [activeVideoEmbedUrl, learningStep, user, id, dsaCourse, isDsaDomain, activeVideo]);
 
   // Hook up YouTube Player state listener for checkpoint videos
   useEffect(() => {
@@ -599,6 +663,9 @@ export const useDSATopic = () => {
               onStateChange: (event) => {
                 if (event.data === 0) {
                   setCheckpointVideoFinished(true);
+                  if (isDsaDomain && activeVideo?.key) {
+                    localStorage.setItem(`dsa_video_done_${id}_${activeVideo.key}`, 'true');
+                  }
                   toast.success("Checkpoint tutorial video completed! challenge unlocked! 🔓");
                 }
 
@@ -639,13 +706,10 @@ export const useDSATopic = () => {
         } catch (e) {}
       }
     };
-  }, [checkpointVideoEmbedUrl, activeCheckpoint, user, id, activeDomainKey]);
+  }, [checkpointVideoEmbedUrl, activeCheckpoint, user, id, activeDomainKey, isDsaDomain, activeVideo]);
 
   // Reset boilerplate when topic, language, or difficulty changes
   useEffect(() => {
-    // TEMP DEBUG
-    // eslint-disable-next-line no-console
-    console.log('[DEBUG bp-effect] deps=', JSON.stringify({ id, selectedLang, activeDifficulty, bp: !!langContent?.editorBoilerplate, bpLen: (langContent?.editorBoilerplate || '').length, langLen: (langContent || null) ? 'obj' : 'null' }));
     if (langContent?.editorBoilerplate) {
       setEditorCode(langContent.editorBoilerplate);
       setTestResults([]);
@@ -653,7 +717,7 @@ export const useDSATopic = () => {
       setCompilerStatus('idle');
       setChallengePassed(false);
     }
-  }, [id, selectedLang, activeDifficulty, langContent?.editorBoilerplate]);
+  }, [langContent]);
 
   // Reset editor boilerplate when the active checkpoint changes
   useEffect(() => {
@@ -664,7 +728,7 @@ export const useDSATopic = () => {
       setCompilerStatus('idle');
       setChallengePassed(false);
     }
-  }, [isCheckpointModule, activeCheckpoint, activeCheckpointContent?.editorBoilerplate]);
+  }, [isCheckpointModule, activeCheckpointContent]);
 
   // Restores a historical submission back into the editor
   const handleLoadSubmission = (subCode, subLang) => {
@@ -1140,6 +1204,8 @@ export const useDSATopic = () => {
     currentCpIndex, isLastCp,
     // domain flags
     isDsaDomain, isWebDevDomain, shouldSplitWorkspace, availableLanguages,
+    // workspace video catalog
+    topicVideos, activeVideo, activeVideoKey, setActiveVideoKey,
     // content
     langContent, activeCheckpointContent, checkpointVideoEmbedUrl, activeVideoEmbedUrl,
     // layout

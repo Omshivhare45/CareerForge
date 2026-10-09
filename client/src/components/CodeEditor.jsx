@@ -149,15 +149,25 @@ const CodeEditor = memo(({
       <Suspense fallback={<EditorLoader />}>
         <MonacoEditor
           width="100%"
-          height="100%"
+          height="400px"
+          keepCurrentModel
           language={language}
           value={value}
           theme={resolvedTheme}
           beforeMount={handleBeforeMount}
-          onMount={(editor) => {
-            editorRef.current = editor;
-            requestAnimationFrame(() => editor.layout());
-          }}
+          
+onMount={(editor) => {
+  editorRef.current = editor;
+
+  const layoutEditor = () => {
+    editor.layout();
+  };
+
+  requestAnimationFrame(layoutEditor);
+  setTimeout(layoutEditor, 100);
+  setTimeout(layoutEditor, 300);
+}}
+
           onChange={(val) => onChange?.(val ?? '')}
           loading={<EditorLoader />}
           options={mergedOptions}

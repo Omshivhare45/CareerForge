@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { FiArrowLeft, FiZap, FiCheckCircle, FiList, FiMinimize2 } from 'react-icons/fi';
+import { FiArrowLeft, FiZap, FiCheckCircle } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 // Sidebar for the topic learning page.
@@ -225,6 +225,7 @@ const TopicSidebar = ({ ctx, mode }) => {
           {allTopics.map((t, index) => {
             const active = t._id === id;
             const done = activeDomainProgress.completedTopics?.some(ct => ct.topicId === t._id || ct.topicId?._id === t._id);
+
             return (
               <Link
                 key={t._id}
