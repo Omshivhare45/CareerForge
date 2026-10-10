@@ -599,15 +599,25 @@ export const useDSATopic = () => {
                 }
 
                 // Periodically save video progress
-                if (event.data === 1 || event.data === 2) {
-                  const currentTime = Math.round(event.target.getCurrentTime());
-                  api.post('/progress/video-progress', {
-                    checkpointId: `tutorial_${id}`,
-                    timestamp: currentTime,
-                    currentCheckpoint: `tutorial_${id}`,
-                    lastOpenedTopic: id
-                  }).catch(e => console.warn("Failed to persist video progress", e));
-                }
+                
+if (event.data === 1 || event.data === 2) {
+  const target = event.target;
+
+  if (typeof target?.getCurrentTime !== 'function') {
+    console.warn('YouTube player API is not ready; skipping progress save.');
+    return;
+  }
+
+  const currentTime = Math.round(target.getCurrentTime());
+
+  api.post('/progress/video-progress', {
+    checkpointId: `tutorial_${id}`,
+    timestamp: currentTime,
+    currentCheckpoint: `tutorial_${id}`,
+    lastOpenedTopic: id
+  }).catch(e => console.warn('Failed to persist video progress', e));
+}
+
               },
               onReady: (event) => {
                 const activeDomainKey = user?.activeDomain?.slug ? getProgressKey(user.activeDomain.slug) : 'dsa';
@@ -670,16 +680,26 @@ export const useDSATopic = () => {
                 }
 
                 // Periodically save video progress
-                if (event.data === 1 || event.data === 2) {
-                  const currentTime = Math.round(event.target.getCurrentTime());
-                  const progressKey = `${activeDomainKey}_${id}_${activeCheckpoint}`;
-                  api.post('/progress/video-progress', {
-                    checkpointId: progressKey,
-                    timestamp: currentTime,
-                    currentCheckpoint: progressKey,
-                    lastOpenedTopic: id
-                  }).catch(e => console.warn("Failed to persist video progress", e));
-                }
+               
+if (event.data === 1 || event.data === 2) {
+  const target = event.target;
+
+  if (typeof target?.getCurrentTime !== 'function') {
+    console.warn('Checkpoint player API is not ready; skipping progress save.');
+    return;
+  }
+
+  const currentTime = Math.round(target.getCurrentTime());
+  const progressKey = `${activeDomainKey}_${id}_${activeCheckpoint}`;
+
+  api.post('/progress/video-progress', {
+    checkpointId: progressKey,
+    timestamp: currentTime,
+    currentCheckpoint: progressKey,
+    lastOpenedTopic: id
+  }).catch(e => console.warn('Failed to persist video progress', e));
+}
+
               },
               onReady: (event) => {
                 const activeDomainKey = user?.activeDomain?.slug ? getProgressKey(user.activeDomain.slug) : 'dsa';
