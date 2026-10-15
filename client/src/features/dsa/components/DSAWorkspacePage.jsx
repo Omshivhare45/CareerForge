@@ -113,7 +113,7 @@ export const DSAWorkspacePage = ({ ctx }) => {
   const cpContent = ctx?.activeCheckpointContent || null;
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-[var(--bg-main)] relative">
+    <div className="flex h-[calc(100svh-64px)] w-full overflow-hidden bg-[var(--bg-main)] relative">
       {/* Mobile backdrop */}
       {isMobile && sidebarOpen && (
         <div

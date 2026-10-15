@@ -21,6 +21,7 @@ import AiChat from './pages/AiChat';
 import Resources from './pages/Resources';
 import CareerGuide from './pages/CareerGuide';
 import ZeroToCoding from './pages/ZeroToCoding';
+import Ide from './pages/Ide';
 import Profile from './pages/Profile';
 import Feedback from './pages/Feedback';
 import About from './pages/About';
@@ -106,6 +107,7 @@ function App() {
               <Route path="/career-guide" element={<CareerGuide />} />
               <Route path="/jobs" element={<Jobs />} />
               <Route path="/zero-to-coding" element={<ZeroToCoding />} />
+              <Route path="/ide" element={<Ide />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/feedback" element={<Feedback />} />
               <Route path="/academics" element={<AcademicsHome />} />

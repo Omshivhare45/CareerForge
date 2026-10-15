@@ -4,7 +4,7 @@ import Navbar from './Navbar';
 import GlobalAiChat from './GlobalAiChat';
 import FloatingOrbs from './FloatingOrbs';
 
-const EDITOR_ROUTES = ['/topic/', '/zero-to-coding'];
+const EDITOR_ROUTES = ['/topic/', '/zero-to-coding', '/ide'];
 
 const Layout = ({ isAdmin = false }) => {
   const location = useLocation();

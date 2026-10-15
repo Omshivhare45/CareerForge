@@ -89,6 +89,8 @@ const Navbar = ({ isAdmin, isScrolled = false, isVisible = true, isCompact = fal
     { name: 'Dashboard', path: '/dashboard', icon: <MdOutlineDashboard /> },
     
     { name: 'Zero to Coding', path: '/zero-to-coding', icon: <FiZap className="text-amber-400" /> },
+
+    { name: 'IDE', path: '/ide', icon: <FiCode /> },
    
     { name: 'Roadmaps', path: '/roadmap', icon: <FiMap /> },
     { name: 'Domains', path: '/domains', icon: <FiList /> },

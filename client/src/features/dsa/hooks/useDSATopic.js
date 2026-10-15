@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../../api/axios';
+import codeApi from '../../../api/codeApi';
 import { useAuth } from '../../../context/AuthContext';
 import { getDsaLanguageContent, getCheckpointContent } from '../../../utils/dsaContent';
 import { getDsaVideoList } from '../utils/dsaVideoCatalog';
@@ -123,6 +124,7 @@ export const useDSATopic = () => {
 
   // Interactive Code Playground States
   const [editorCode, setEditorCode] = useState('');
+  const [customInput, setCustomInput] = useState('');
   const [editorTheme, setEditorTheme] = useState('light');
   const [consoleLogs, setConsoleLogs] = useState([]);
   const [compilerStatus, setCompilerStatus] = useState('idle'); // 'idle' | 'running' | 'passed' | 'failed' | 'compile_error'
@@ -131,6 +133,14 @@ export const useDSATopic = () => {
   const [testResults, setTestResults] = useState([]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [particles, setParticles] = useState([]);
+
+  // Structured output for the bottom Terminal panel. Filled from the real
+  // backend response so stdout/stderr/compile errors stay visible after a run.
+  const [terminalOutput, setTerminalOutput] = useState(null);
+  // Bottom console panel sizing (resizable + collapsible)
+  const [panelHeight, setPanelHeight] = useState(300);
+  const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
+  const [isResizingPanel, setIsResizingPanel] = useState(false);
 
   // LeetCode UI Specific States
   const [leftTab, setLeftTab] = useState('description'); // 'description' | 'approach' | 'submissions'
@@ -317,6 +327,35 @@ export const useDSATopic = () => {
     };
   }, [isDragging]);
 
+  // Bottom console panel resizing (drag the handle above the panel)
+  const startConsoleResize = (e) => {
+    setIsResizingPanel(true);
+    document.body.classList.add('workspace-dragging');
+    e.preventDefault();
+  };
+
+  useEffect(() => {
+    if (!isResizingPanel) return;
+    const handleMouseMove = (e) => {
+      const container = document.getElementById('cf-workspace-column');
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const next = rect.bottom - e.clientY;
+      const max = Math.max(160, rect.height - 210);
+      setPanelHeight(Math.min(Math.max(next, 140), max));
+    };
+    const handleMouseUp = () => {
+      setIsResizingPanel(false);
+      document.body.classList.remove('workspace-dragging');
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizingPanel]);
+
   // Load YouTube IFrame API script once
   useEffect(() => {
     if (!window.YT) {
@@ -390,6 +429,7 @@ export const useDSATopic = () => {
       setCompilerStatus('idle');
       setConsoleLogs([]);
       setTestResults([]);
+      setTerminalOutput(null);
       setSelectedSubCode(null);
       setEditorCode(''); // Clear editor so boilerplate loads fresh
 
@@ -599,24 +639,29 @@ export const useDSATopic = () => {
                 }
 
                 // Periodically save video progress
-                
-if (event.data === 1 || event.data === 2) {
-  const target = event.target;
+                if (event.data === 1 || event.data === 2) {
+  const player = event.target;
 
-  if (typeof target?.getCurrentTime !== 'function') {
-    console.warn('YouTube player API is not ready; skipping progress save.');
+  if (typeof player?.getCurrentTime !== 'function') {
+    console.warn(
+      'Progress not saved: YouTube player is not ready.',
+      event.data
+    );
     return;
   }
 
-  const currentTime = Math.round(target.getCurrentTime());
+  const currentTime = Math.floor(player.getCurrentTime());
 
   api.post('/progress/video-progress', {
     checkpointId: `tutorial_${id}`,
     timestamp: currentTime,
     currentCheckpoint: `tutorial_${id}`,
     lastOpenedTopic: id
-  }).catch(e => console.warn('Failed to persist video progress', e));
+  }).catch(error => {
+    console.warn('Failed to persist video progress:', error);
+  });
 }
+
 
               },
               onReady: (event) => {
@@ -736,6 +781,7 @@ if (event.data === 1 || event.data === 2) {
       setConsoleLogs([]);
       setCompilerStatus('idle');
       setChallengePassed(false);
+      setTerminalOutput(null);
     }
   }, [langContent]);
 
@@ -747,6 +793,7 @@ if (event.data === 1 || event.data === 2) {
       setConsoleLogs([]);
       setCompilerStatus('idle');
       setChallengePassed(false);
+      setTerminalOutput(null);
     }
   }, [isCheckpointModule, activeCheckpointContent]);
 
@@ -781,92 +828,242 @@ if (event.data === 1 || event.data === 2) {
     }, 3000);
   };
 
+  // Real code evaluation through the backend (Judge0). Function-style DSA
+  // exercises are wrapped in a generated per-language harness on the server,
+  // so every verdict comes from actual compilation + execution.
+  const evaluateCode = async (content, { useCustom = false } = {}) => {
+    const testCases = content?.testCases || [];
+    const functionName = content?.functionName || 'solution';
+
+    // HTML/CSS can't run on Judge0 — keep the browser parser sandbox for those.
+    if (selectedLang === 'html' || selectedLang === 'css') {
+      const { results, logs } = executeSandbox(editorCode, selectedLang, testCases, functionName);
+      const passedAll = results.length > 0 && results.every(r => r.status === 'passed');
+      return {
+        testResults: results,
+        logs,
+        passedAll,
+        passedCount: results.filter(r => r.status === 'passed').length,
+        totalCount: results.length,
+        status: passedAll ? 'Accepted' : 'Wrong Answer',
+        runtime: '',
+        memory: '',
+        executionStatus: null,
+        stdout: '',
+        stderr: '',
+        compileOutput: ''
+      };
+    }
+
+    if (!editorCode || !editorCode.trim()) {
+      throw new Error('Compilation Error: Please write your solution code before running.');
+    }
+
+    const payload = {
+      language: currentLangName,
+      code: editorCode,
+      functionName
+    };
+
+    if (useCustom) {
+      payload.customInput = customInput ?? '';
+    } else {
+      payload.testCases = testCases.map((tc) => ({
+        input: tc.input,
+        expectedOutput: tc.expected
+      }));
+    }
+
+    const res = await codeApi.judge(payload);
+    const data = res.data?.data || {};
+    const logs = [`⚡ Compiling ${currentLangName} solution on the server...`];
+
+    if (data.compile_output) {
+      logs.push('💥 Compilation Error:');
+      logs.push(data.compile_output);
+    }
+    if (data.executionStatus) {
+      logs.push(`💥 ${data.executionStatus}${data.stderr ? `: ${data.stderr}` : ''}`);
+    }
+    if (data.harnessNote) {
+      logs.push(`ℹ️ Function harness unavailable, ran your program directly: ${data.harnessNote}`);
+    }
+
+    const testResults = (data.testCaseResults || []).map((r, idx) => {
+      const passed = Boolean(r.passed);
+      const isHidden = idx >= 2;
+      if (passed) {
+        logs.push(`🟢 ${isHidden ? 'Hidden' : 'Sample'} Test Case ${idx + 1}: Passed!`);
+      } else {
+        logs.push(`❌ ${isHidden ? 'Hidden' : 'Sample'} Test Case ${idx + 1}: Failed! Expected: ${r.expectedOutput ?? '(execution)'} Got: ${r.actualOutput ?? ''}`);
+      }
+      return {
+        input: r.input,
+        expected: r.expectedOutput ?? '',
+        actual: r.actualOutput ?? '',
+        status: passed ? 'passed' : 'failed',
+        isHidden,
+        runtime: r.runtime,
+        memory: r.memory
+      };
+    });
+
+    if (useCustom) {
+      logs.push('— stdout —');
+      logs.push(data.stdout ? data.stdout.replace(/\n$/, '') : '(no output)');
+      if (data.stderr) {
+        logs.push('— stderr —');
+        logs.push(data.stderr);
+      }
+    }
+
+    const passedCount = data.passedCount ?? testResults.filter(r => r.status === 'passed').length;
+    const totalCount = data.totalCount ?? testResults.length;
+    const passedAll = totalCount > 0 && passedCount === totalCount;
+
+    return {
+      testResults,
+      logs,
+      passedAll,
+      passedCount,
+      totalCount,
+      status: data.status || (passedAll ? 'Accepted' : 'Wrong Answer'),
+      runtime: data.runtime || '',
+      memory: data.memory || '',
+      executionStatus: data.executionStatus || null,
+      stdout: data.stdout || '',
+      stderr: data.stderr || '',
+      compileOutput: data.compile_output || ''
+    };
+  };
+
   // Shared run-code handler — wired via data so every topic uses the same flow
-  const handleRunCode = () => {
-    setChallengePassed(false); // CRITICAL BUG FIX: Reset on run
+  const handleRunCode = async () => {
+    setChallengePassed(false);
     setCompilerStatus('running');
     setActiveConsoleTab('result');
+    const useCustom = (customInput || '').trim().length > 0;
     setConsoleLogs([
       `⚡ Initializing interactive environment for ${selectedLang.toUpperCase()}...`,
-      `📦 Parsing source code syntax...`,
-      `⚙️ Executing standard check assertions...`
+      useCustom ? '📥 Sending custom input to the execution sandbox...' : '⚙️ Executing test assertions on the server...'
     ]);
+    setTerminalOutput({ mode: 'run', isRunning: true, customInputUsed: useCustom });
 
-    requestAnimationFrame(() => {
-      try {
-        const { results, logs } = executeSandbox(editorCode, selectedLang, langContent.testCases, langContent?.functionName);
-        setTestResults(results);
-        setConsoleLogs(logs);
+    try {
+      const result = await evaluateCode(langContent, { useCustom });
+      setTestResults(result.testResults);
+      setConsoleLogs(result.logs);
+      setTerminalOutput({
+        mode: 'run',
+        status: result.status,
+        executionStatus: result.executionStatus,
+        stdout: result.stdout,
+        stderr: result.stderr,
+        compileOutput: result.compileOutput,
+        passedCount: result.passedCount,
+        totalCount: result.totalCount,
+        runtime: result.runtime,
+        memory: result.memory,
+        customInputUsed: useCustom
+      });
 
-        const passedAll = results.every(r => r.status === 'passed');
-        if (passedAll) {
-          setCompilerStatus('passed');
-          setChallengePassed(true);
-          playSoundEffect('success');
-          toast.success("All test cases passed! Ready to submit! 🏆", { icon: '✨' });
-        } else {
-          setCompilerStatus('failed');
-          setChallengePassed(false);
-          playSoundEffect('error');
-          toast.error("Some test cases failed. Keep refining your logic!");
-        }
-      } catch (err) {
-        setChallengePassed(false);
-        if (err.message.includes("Compilation Error")) {
-          setCompilerStatus('compile_error');
-        } else {
-          setCompilerStatus('failed');
-        }
-        setConsoleLogs(prev => [...prev, `💥 Compiler Panic Error: ${err.message}`]);
+      if (result.executionStatus === 'Compilation Error') {
+        setCompilerStatus('compile_error');
         playSoundEffect('error');
-        toast.error("Compilation / Execution Failed!");
+        toast.error('Compilation Error — check your syntax!');
+        return;
       }
-    });
+
+      if (useCustom) {
+        if (result.executionStatus) {
+          setCompilerStatus('failed');
+          playSoundEffect('error');
+          toast.error('Execution failed. Check the output log!');
+        } else {
+          setCompilerStatus('passed');
+          playSoundEffect('success');
+          toast.success('Program executed successfully!');
+        }
+        return;
+      }
+
+      if (result.passedAll) {
+        setCompilerStatus('passed');
+        setChallengePassed(true);
+        playSoundEffect('success');
+        toast.success('All test cases passed! Ready to submit! 🏆', { icon: '✨' });
+      } else {
+        setCompilerStatus('failed');
+        setChallengePassed(false);
+        playSoundEffect('error');
+        toast.error('Some test cases failed. Keep refining your logic!');
+      }
+    } catch (err) {
+      setChallengePassed(false);
+      const message = err.response?.data?.message || err.message || 'Execution failed';
+      setCompilerStatus(/compil/i.test(message) ? 'compile_error' : 'failed');
+      setConsoleLogs(prev => [...prev, `💥 ${message}`]);
+      setTerminalOutput({
+        mode: 'run',
+        status: 'Request Failed',
+        executionStatus: /compil/i.test(message) ? 'Compilation Error' : 'Execution Error',
+        stdout: '',
+        stderr: message,
+        compileOutput: '',
+        customInputUsed: true
+      });
+      playSoundEffect('error');
+      toast.error('Compilation / Execution Failed!');
+    }
   };
 
   // Checkpoint run — uses checkpoint test cases + function name
-  const handleCheckpointRunCode = useCallback(() => {
+  const handleCheckpointRunCode = async () => {
     const cpContent = activeCheckpointContent;
     if (!cpContent) return;
     setChallengePassed(false);
     setCompilerStatus('running');
     setActiveConsoleTab('result');
     setConsoleLogs([
-      '⚡ Compiling your code...',
-      `📋 Running ${cpContent.testCases.length} test case(s)...`
+      '⚡ Compiling your code on the server...',
+      `📋 Running ${(cpContent.testCases || []).length} test case(s)...`
     ]);
-    setTimeout(() => {
-      try {
-        const { results, logs } = executeSandbox(editorCode, selectedLang, cpContent.testCases, cpContent.functionName);
-        setTestResults(results);
-        setConsoleLogs(logs);
-        const passedAll = results.every(r => r.status === 'passed');
-        if (passedAll) {
-          setCompilerStatus('passed');
-          setChallengePassed(true);
-          setCheckpointCodePassed(true);
-          playSoundEffect('success');
-          toast.success('🎉 All test cases passed! You can now complete this checkpoint!');
-        } else {
-          setCompilerStatus('failed');
-          setChallengePassed(false);
-          setCheckpointCodePassed(false);
-          playSoundEffect('error');
-          toast.error('❌ Some tests failed. Check the hints and try again! 💪');
-        }
-      } catch (err) {
+
+    try {
+      const result = await evaluateCode(cpContent, { useCustom: false });
+      setTestResults(result.testResults);
+      setConsoleLogs(result.logs);
+
+      if (result.executionStatus === 'Compilation Error') {
         setCompilerStatus('compile_error');
-        if (err.message.includes('Maximum call stack size exceeded')) {
-          setConsoleLogs(prev => [...prev, `💥 CODE GURU: Stack Overflow Detected! You missed a base case or your recursive call isn't reducing the problem size.`]);
-          toast.error('Code Guru: Stack Overflow! Check your base case.');
-        } else {
-          setConsoleLogs(prev => [...prev, `💥 Compilation Error: ${err.message}`]);
-          toast.error('Compilation Error — check your syntax!');
-        }
+        setCheckpointCodePassed(false);
         playSoundEffect('error');
+        toast.error('Compilation Error — check your syntax!');
+        return;
       }
-    }, 1000);
-  }, [activeCheckpointContent, editorCode, selectedLang]);
+
+      if (result.passedAll) {
+        setCompilerStatus('passed');
+        setChallengePassed(true);
+        setCheckpointCodePassed(true);
+        playSoundEffect('success');
+        toast.success('🎉 All test cases passed! You can now complete this checkpoint!');
+      } else {
+        setCompilerStatus('failed');
+        setChallengePassed(false);
+        setCheckpointCodePassed(false);
+        playSoundEffect('error');
+        toast.error('❌ Some tests failed. Check the hints and try again! 💪');
+      }
+    } catch (err) {
+      const message = err.response?.data?.message || err.message || 'Execution failed';
+      setCompilerStatus(/compil/i.test(message) ? 'compile_error' : 'failed');
+      setCheckpointCodePassed(false);
+      setConsoleLogs(prev => [...prev, `💥 ${message}`]);
+      playSoundEffect('error');
+      toast.error('Compilation Error — check your syntax!');
+    }
+  };
 
   const handleGamificationUpdate = () => {
     let totalXP = parseInt(localStorage.getItem('dsa_total_xp') || '0', 10);
@@ -953,111 +1150,137 @@ if (event.data === 1 || event.data === 2) {
       `📦 Packaging solution code files...`,
       `⚙️ Executing sandboxed test evaluation suite...`
     ]);
+    setTerminalOutput({ mode: 'submit', isRunning: true, customInputUsed: false });
 
-    setTimeout(async () => {
-      try {
-        const startTime = performance.now();
-        const { results, logs } = executeSandbox(editorCode, selectedLang, langContent.testCases, langContent?.functionName);
-        const endTime = performance.now();
+    try {
+      const result = await evaluateCode(langContent, { useCustom: false });
 
-        setTestResults(results);
-        setConsoleLogs(logs);
+      setTestResults(result.testResults);
+      setConsoleLogs(result.logs);
+      setTerminalOutput({
+        mode: 'submit',
+        status: result.status,
+        executionStatus: result.executionStatus,
+        stdout: result.stdout,
+        stderr: result.stderr,
+        compileOutput: result.compileOutput,
+        passedCount: result.passedCount,
+        totalCount: result.totalCount,
+        runtime: result.runtime,
+        memory: result.memory,
+        customInputUsed: false
+      });
 
-        const passedAll = results.every(r => r.status === 'passed');
-        const passedCount = results.filter(r => r.status === 'passed').length;
-        const totalCount = results.length;
-        const runtime = Math.round(endTime - startTime + Math.random() * 5 + 5);
+      const passedAll = result.passedAll;
+      const passedCount = result.passedCount;
+      const totalCount = result.totalCount;
+      const parsedRuntime = Number.parseFloat(result.runtime);
+      const runtime = Number.isFinite(parsedRuntime) ? Math.max(1, Math.round(parsedRuntime * 1000)) : 0;
 
-        const status = passedAll ? 'Accepted' : 'Wrong Answer';
+      const status = passedAll ? 'Accepted' : 'Wrong Answer';
 
-        if (passedAll) {
-          setCompilerStatus('passed');
-          setChallengePassed(true);
-          playSoundEffect('success');
-          triggerConfettiExplosion();
-          toast.success("Submission Accepted! +100 Quest XP Unlocked! 🏆", { icon: '✨' });
-
-          // Progressive Difficulty Unlock Mechanism
-          localStorage.setItem(`dsa_completed_${id}_${activeDifficulty}`, 'true');
-          const difficulties = ['beginner', 'easy', 'medium', 'challenge'];
-          const currentIdx = difficulties.indexOf(activeDifficulty);
-          if (currentIdx !== -1 && currentIdx < difficulties.length - 1) {
-            const nextDiff = difficulties[currentIdx + 1];
-            toast.success(`New rank unlocked: ${nextDiff.toUpperCase()}! 🚀`);
-          }
-
-          // Trigger local gamification updates & celebration modal
-          handleGamificationUpdate();
-
-          // Automatically complete the topic in the background if not already completed!
-          const isAlreadyCompleted = activeDomainProgress.completedTopics?.some(t => t.topicId === id || t.topicId?._id === id);
-          if (!isAlreadyCompleted) {
-            try {
-              const res = await api.post('/progress/complete-topic', {
-                topicId: id,
-                studyTimeMinutes: Number(studyTime),
-                notes: notes || 'Code submitted successfully via editor.',
-                difficultyFeedback: difficultyFeedback || 'easy',
-                confidenceLevel: confidenceLevel || 5,
-                revisionNeeded: false
-              });
-              if (res.data.success) {
-                const { newlyEarnedBadges, newlyEarnedCertificate, topicBadge } = res.data.data;
-                setCelebrationData(prev => {
-                  if (!prev) return null;
-                  const finalBadges = newlyEarnedBadges && newlyEarnedBadges.length > 0
-                    ? [...newlyEarnedBadges, ...(topicBadge ? [topicBadge] : [])]
-                    : (topicBadge ? [topicBadge] : (topic?.badge ? [topic.badge] : []));
-
-                  const uniqueBadges = finalBadges.filter((b, idx, self) =>
-                    self.findIndex(x => x.name === b.name || x._id === b._id) === idx
-                  );
-
-                  return {
-                    ...prev,
-                    newlyEarnedBadges: uniqueBadges,
-                    newlyEarnedCertificate
-                  };
-                });
-              }
-            } catch (autoErr) {
-              console.error('Failed to auto-complete topic:', autoErr);
-            }
-          }
-        } else {
-          setCompilerStatus('failed');
-          setChallengePassed(false); // Strictly reset
-          playSoundEffect('error');
-          toast.error("Submission Failed: Wrong Answer");
-        }
-
-        // Save to Database Submission History
-        await api.post('/progress/submit-code', {
-          topicId: id,
-          code: editorCode,
-          language: selectedLang,
-          status,
-          passedCount,
-          totalCount,
-          runtime
-        });
-
-        // Pull latest updates from DB
-        fetchSubmissions();
-        await refreshUser();
-
-      } catch (err) {
-        setChallengePassed(false); // Strictly reset
-        if (err.message.includes("Compilation Error")) {
-          setCompilerStatus('compile_error');
-        } else {
-          setCompilerStatus('failed');
-        }
-        setConsoleLogs(prev => [...prev, `💥 Submission crashed: ${err.message}`]);
+      if (result.executionStatus === 'Compilation Error') {
+        setCompilerStatus('compile_error');
+        setChallengePassed(false);
         playSoundEffect('error');
-        toast.error("Submission crashed! Check your syntax.");
+        toast.error('Compilation Error — check your syntax!');
+      } else if (passedAll) {
+        setCompilerStatus('passed');
+        setChallengePassed(true);
+        playSoundEffect('success');
+        triggerConfettiExplosion();
+        toast.success("Submission Accepted! +100 Quest XP Unlocked! 🏆", { icon: '✨' });
+
+        // Progressive Difficulty Unlock Mechanism
+        localStorage.setItem(`dsa_completed_${id}_${activeDifficulty}`, 'true');
+        const difficulties = ['beginner', 'easy', 'medium', 'challenge'];
+        const currentIdx = difficulties.indexOf(activeDifficulty);
+        if (currentIdx !== -1 && currentIdx < difficulties.length - 1) {
+          const nextDiff = difficulties[currentIdx + 1];
+          toast.success(`New rank unlocked: ${nextDiff.toUpperCase()}! 🚀`);
+        }
+
+        // Trigger local gamification updates & celebration modal
+        handleGamificationUpdate();
+
+        // Automatically complete the topic in the background if not already completed!
+        const isAlreadyCompleted = activeDomainProgress.completedTopics?.some(t => t.topicId === id || t.topicId?._id === id);
+        if (!isAlreadyCompleted) {
+          try {
+            const res = await api.post('/progress/complete-topic', {
+              topicId: id,
+              studyTimeMinutes: Number(studyTime),
+              notes: notes || 'Code submitted successfully via editor.',
+              difficultyFeedback: difficultyFeedback || 'easy',
+              confidenceLevel: confidenceLevel || 5,
+              revisionNeeded: false
+            });
+            if (res.data.success) {
+              const { newlyEarnedBadges, newlyEarnedCertificate, topicBadge } = res.data.data;
+              setCelebrationData(prev => {
+                if (!prev) return null;
+                const finalBadges = newlyEarnedBadges && newlyEarnedBadges.length > 0
+                  ? [...newlyEarnedBadges, ...(topicBadge ? [topicBadge] : [])]
+                  : (topicBadge ? [topicBadge] : (topic?.badge ? [topic.badge] : []));
+
+                const uniqueBadges = finalBadges.filter((b, idx, self) =>
+                  self.findIndex(x => x.name === b.name || x._id === b._id) === idx
+                );
+
+                return {
+                  ...prev,
+                  newlyEarnedBadges: uniqueBadges,
+                  newlyEarnedCertificate
+                };
+              });
+            }
+          } catch (autoErr) {
+            console.error('Failed to auto-complete topic:', autoErr);
+          }
+        }
+      } else {
+        setCompilerStatus('failed');
+        setChallengePassed(false); // Strictly reset
+        playSoundEffect('error');
+        toast.error("Submission Failed: Wrong Answer");
       }
-    }, 1500);
+
+      // Save to Database Submission History
+      await api.post('/progress/submit-code', {
+        topicId: id,
+        code: editorCode,
+        language: selectedLang,
+        status,
+        passedCount,
+        totalCount,
+        runtime
+      });
+
+      // Pull latest updates from DB
+      fetchSubmissions();
+      await refreshUser();
+
+    } catch (err) {
+      setChallengePassed(false); // Strictly reset
+      const message = err.response?.data?.message || err.message || 'Submission failed';
+      if (/compil/i.test(message)) {
+        setCompilerStatus('compile_error');
+      } else {
+        setCompilerStatus('failed');
+      }
+      setConsoleLogs(prev => [...prev, `💥 Submission crashed: ${message}`]);
+      setTerminalOutput({
+        mode: 'submit',
+        status: 'Request Failed',
+        executionStatus: /compil/i.test(message) ? 'Compilation Error' : 'Execution Error',
+        stdout: '',
+        stderr: message,
+        compileOutput: '',
+        customInputUsed: false
+      });
+      playSoundEffect('error');
+      toast.error("Submission crashed! Check your syntax.");
+    }
   };
 
   // Submit topic complete manually
@@ -1197,11 +1420,16 @@ if (event.data === 1 || event.data === 2) {
     dsaCourse, currentLangName,
     // editor state
     editorCode, setEditorCode,
+    customInput, setCustomInput,
     editorTheme, setEditorTheme, toggleWorkspaceTheme,
     consoleLogs, setConsoleLogs,
     compilerStatus, setCompilerStatus,
     challengePassed, setChallengePassed,
     testResults, setTestResults,
+    terminalOutput, setTerminalOutput,
+    panelHeight, setPanelHeight,
+    isPanelCollapsed, setIsPanelCollapsed,
+    isResizingPanel, startConsoleResize,
     showConfetti, particles,
     // LC-style tabs
     leftTab, setLeftTab, activeConsoleTab, setActiveConsoleTab,

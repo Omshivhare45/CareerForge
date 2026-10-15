@@ -16,3 +16,10 @@ services:
         sync: false
       - key: JWT_SECRET
         sync: false
+      # Judge0 code execution endpoint. Set this in the Render dashboard.
+      # Public CE instance: https://ce.judge0.com
+      - key: JUDGE0_API_URL
+        sync: false
+      # Optional: only needed for a private Judge0 / RapidAPI instance.
+      - key: JUDGE0_AUTH_TOKEN
+        sync: false

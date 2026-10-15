@@ -149,7 +149,7 @@ const CodeEditor = memo(({
       <Suspense fallback={<EditorLoader />}>
         <MonacoEditor
           width="100%"
-          height="400px"
+          height="100%"
           keepCurrentModel
           language={language}
           value={value}

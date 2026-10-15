@@ -10,6 +10,22 @@ import { getGreedyCheckpointContent } from './greedyContent';
 import { getDsaSheetCheckpointContent } from './dsaSheetContent';
 import { getOopsCheckpointContent } from './oopsContent';
 
+// DSA editor starters: a minimal, language-native program skeleton so learners
+// write a complete program from main() instead of filling in a problem-specific
+// function stub. Applied to every DSA topic and checkpoint.
+const DSA_MINIMAL_STARTERS = {
+  cpp: '#include <iostream>\nusing namespace std;\n\nint main() {\n    return 0;\n}\n',
+  java: 'public class Main {\n    public static void main(String[] args) {\n    }\n}\n',
+  python: 'def main():\n    pass\n\nif __name__ == "__main__":\n    main()\n',
+  javascript: ''
+};
+
+const getDsaMinimalStarter = (lang) => {
+  const key = (lang || 'cpp').toLowerCase();
+  const normalized = key === 'c++' ? 'cpp' : key === 'js' ? 'javascript' : key;
+  return DSA_MINIMAL_STARTERS[normalized] ?? '';
+};
+
 // DSA Content Engine - Striver A2Z Aligned with 4 Unlockable Difficulty Levels per Topic
 // Boilerplates are strictly minimal starters (only imports + class/function signatures) - NO solutions/loops prefilled.
 
@@ -1679,7 +1695,7 @@ export const getDsaLanguageContent = (topicTitle, languageKey = 'cpp', difficult
     challengeDescription: q.desc,
     approach: q.approach,
     code: q.sol[lang] || '',
-    editorBoilerplate: q.bp[lang] || '',
+    editorBoilerplate: getDsaMinimalStarter(lang),
     timeComplexity: q.time,
     spaceComplexity: q.space,
     testCases: q.testCases,
@@ -2291,7 +2307,7 @@ export const getCheckpointContent = (checkpointId, lang = 'cpp', dsaCourse = 'de
         content.videoEmbedUrl = `https://www.youtube.com/embed/${babbarVideoId}?list=PLDzeHZWIZsTryvtXdMr6rPh4IDexB5NIA&rel=0&modestbranding=1`;
       }
     }
-    return content;
+    return { ...content, editorBoilerplate: getDsaMinimalStarter(lang) };
   }
   const language = (lang || 'cpp').toLowerCase();
 
@@ -2606,7 +2622,7 @@ export const getCheckpointContent = (checkpointId, lang = 'cpp', dsaCourse = 'de
     challengeDescription: langChallenge.desc,
     approach: langChallenge.approach || '',
     code: langChallenge.sol || '',
-    editorBoilerplate: langChallenge.bp || '',
+    editorBoilerplate: getDsaMinimalStarter(language),
     testCases: langChallenge.testCases,
     functionName: langChallenge.functionName,
     hints: langChallenge.hints,

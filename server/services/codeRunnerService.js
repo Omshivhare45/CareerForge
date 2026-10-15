@@ -7,6 +7,33 @@ const LANGUAGE_MAP = {
   JavaScript: 63
 };
 
+// The frontend uses short keys ('cpp', 'js', 'py'...) while Judge0 uses
+// canonical names. Accept both and resolve to the canonical key.
+const LANGUAGE_ALIASES = {
+  cpp: 'C++',
+  'c++': 'C++',
+  cplusplus: 'C++',
+  java: 'Java',
+  python: 'Python',
+  py: 'Python',
+  python3: 'Python',
+  javascript: 'JavaScript',
+  js: 'JavaScript',
+  node: 'JavaScript',
+  nodejs: 'JavaScript'
+};
+
+const normalizeLanguage = (language) => {
+  if (!language) {
+    return null;
+  }
+  const raw = String(language).trim();
+  if (LANGUAGE_MAP[raw]) {
+    return raw;
+  }
+  return LANGUAGE_ALIASES[raw.toLowerCase()] || null;
+};
+
 const TERMINAL_STATUSES = new Set([3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]);
 
 const normalizeOutput = (output) => {
@@ -25,15 +52,41 @@ const normalizeOutput = (output) => {
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Judge0 (especially the free CE instance) rejects payloads it cannot prove are
+// valid UTF-8. User code can legitimately contain non-ASCII characters, so all
+// submissions are sent with base64_encoded=true and decoded on the way back.
+const encodeBase64 = (value) =>
+  value === undefined || value === null ? '' : Buffer.from(String(value), 'utf8').toString('base64');
+
+const decodeBase64 = (value) => {
+  if (value === undefined || value === null || value === '') {
+    return '';
+  }
+  try {
+    return Buffer.from(String(value), 'base64').toString('utf8');
+  } catch (error) {
+    return '';
+  }
+};
+
+// Judge0 is exposed in three common shapes:
+//   1. RapidAPI  -> JUDGE0_API_KEY + JUDGE0_API_HOST (X-RapidAPI-* headers)
+//   2. Judge0 CE -> JUDGE0_AUTH_TOKEN (X-Auth-Token) or nothing for a public instance
+//   3. Self-host -> JUDGE0_API_URL only
 const getJudgeHeaders = () => {
   const headers = { 'Content-Type': 'application/json' };
 
-  if (process.env.JUDGE0_API_KEY) {
-    headers['X-RapidAPI-Key'] = process.env.JUDGE0_API_KEY;
+  if (process.env.JUDGE0_API_HOST) {
+    if (process.env.JUDGE0_API_KEY) {
+      headers['X-RapidAPI-Key'] = process.env.JUDGE0_API_KEY;
+    }
+    headers['X-RapidAPI-Host'] = process.env.JUDGE0_API_HOST;
+    return headers;
   }
 
-  if (process.env.JUDGE0_API_HOST) {
-    headers['X-RapidAPI-Host'] = process.env.JUDGE0_API_HOST;
+  const token = process.env.JUDGE0_AUTH_TOKEN || process.env.JUDGE0_API_KEY;
+  if (token) {
+    headers['X-Auth-Token'] = token;
   }
 
   return headers;
@@ -42,10 +95,20 @@ const getJudgeHeaders = () => {
 const getJudgeBaseUrl = () => {
   const baseUrl = process.env.JUDGE0_API_URL || '';
   if (!baseUrl) {
-    throw new Error('Code runner is not configured. Set JUDGE0_API_URL.');
+    throw new Error('Code execution is not configured. Set JUDGE0_API_URL on the server.');
   }
   return baseUrl.replace(/\/$/, '');
 };
+
+// Lets the API report whether code execution is configured without ever
+// leaking the credentials to the client.
+const getJudgeConfigStatus = () => ({
+  configured: Boolean(process.env.JUDGE0_API_URL),
+  baseUrl: process.env.JUDGE0_API_URL || null,
+  authMode: process.env.JUDGE0_API_HOST
+    ? (process.env.JUDGE0_API_KEY ? 'rapidapi' : 'rapidapi-no-key')
+    : (process.env.JUDGE0_AUTH_TOKEN || process.env.JUDGE0_API_KEY ? 'auth-token' : 'none')
+});
 
 const mapExecutionFailure = (result) => {
   const statusId = result.judgeStatusId;
@@ -72,11 +135,11 @@ const mapExecutionFailure = (result) => {
 const submitToJudge = async ({ sourceCode, languageId, stdin }) => {
   const baseUrl = getJudgeBaseUrl();
   const response = await axios.post(
-    `${baseUrl}/submissions?base64_encoded=false`,
+    `${baseUrl}/submissions?base64_encoded=true`,
     {
-      source_code: sourceCode,
+      source_code: encodeBase64(sourceCode),
       language_id: languageId,
-      stdin: stdin || '',
+      stdin: encodeBase64(stdin),
       cpu_time_limit: 2,
       cpu_extra_time: 0.5,
       wall_time_limit: 5,
@@ -96,7 +159,7 @@ const fetchJudgeResult = async (token) => {
 
   for (let attempt = 0; attempt < 20; attempt += 1) {
     const response = await axios.get(
-      `${baseUrl}/submissions/${token}?base64_encoded=false&fields=*`,
+      `${baseUrl}/submissions/${token}?base64_encoded=true&fields=*`,
       {
         headers: getJudgeHeaders(),
         timeout: 15000
@@ -120,7 +183,8 @@ const runCode = async ({ sourceCode, language, stdin }) => {
     throw new Error('Source code is required.');
   }
 
-  const languageId = LANGUAGE_MAP[language];
+  const canonical = normalizeLanguage(language);
+  const languageId = canonical ? LANGUAGE_MAP[canonical] : null;
   if (!languageId) {
     throw new Error(`Unsupported language: ${language}`);
   }
@@ -130,9 +194,9 @@ const runCode = async ({ sourceCode, language, stdin }) => {
 
   return {
     token,
-    stdout: result.stdout || '',
-    stderr: result.stderr || '',
-    compile_output: result.compile_output || '',
+    stdout: decodeBase64(result.stdout),
+    stderr: decodeBase64(result.stderr),
+    compile_output: decodeBase64(result.compile_output),
     status: result.status?.description || 'Unknown',
     time: result.time || '',
     memory: result.memory ? `${result.memory} KB` : '',
@@ -211,7 +275,9 @@ const runAgainstTestCases = async ({ code, language, testCases = [] }) => {
 
 module.exports = {
   LANGUAGE_MAP,
+  normalizeLanguage,
   normalizeOutput,
+  getJudgeConfigStatus,
   runCode,
   runAgainstTestCases
 };
